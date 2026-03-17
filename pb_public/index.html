@@ -305,7 +305,7 @@
 </script>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js?v=2026"></script>
+<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.1/dist/pocketbase.umd.js"></script>
 
 <div class="container">
     <aside class="sidebar">
@@ -1319,7 +1319,7 @@ document.body.addEventListener('click', (e) => {
 // ==========================================
 // 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
 // 讓系統自動偵測目前的網址，永遠不會連錯！
-    const pb = new PocketBase('https://onene.up.railway.app');
+    const pb = new PocketBase(window.location.origin);
 
 function initAuth() {
     const loginBtn = document.getElementById('login-btn');
@@ -1405,22 +1405,20 @@ function initAuth() {
         }
     });
 
-    // Google 登入按鈕 - 增強版
+    // Google 登入按鈕 - 終極穩定版
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
             try {
-                // 明確指定連線到你的 Google Provider
+                // 執行登入，PocketBase 會自動處理彈窗
                 await pb.collection('users').authWithOAuth2({ 
-                    provider: 'google',
-                    // 如果是在本地測試，可以取消下面註解
-                    // urlCallback: (url) => { window.open(url, '_blank'); }
+                    provider: 'google' 
                 });
                 
                 alert('Google 登入成功！');
                 checkLoginStatus();
             } catch (err) {
-                console.error("PocketBase 錯誤詳情:", err);
-                alert('登入失敗：請確認 Google 後台 Client ID 是否正確填寫。');
+                console.error("詳細錯誤內容：", err);
+                alert('登入失敗。請稍後再試，或聯絡開發者確認後台設定。');
             }
         });
     }
