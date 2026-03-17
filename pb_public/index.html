@@ -305,7 +305,7 @@
 </script>
 </head>
 <body>
-<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js?v=2026"></script>
 
 <div class="container">
     <aside class="sidebar">
@@ -1405,16 +1405,22 @@ function initAuth() {
         }
     });
 
-    // Google 登入按鈕
+    // Google 登入按鈕 - 增強版
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
             try {
-                await pb.collection('users').authWithOAuth2({ provider: 'google' });
+                // 明確指定連線到你的 Google Provider
+                await pb.collection('users').authWithOAuth2({ 
+                    provider: 'google',
+                    // 如果是在本地測試，可以取消下面註解
+                    // urlCallback: (url) => { window.open(url, '_blank'); }
+                });
+                
                 alert('Google 登入成功！');
                 checkLoginStatus();
             } catch (err) {
-                console.log("Google 登入中斷或失敗", err);
-                alert('Google 登入已取消或發生錯誤。');
+                console.error("PocketBase 錯誤詳情:", err);
+                alert('登入失敗：請確認 Google 後台 Client ID 是否正確填寫。');
             }
         });
     }
