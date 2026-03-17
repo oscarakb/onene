@@ -582,45 +582,6 @@ class Star {
 }
 function initCanvas() { const parent = canvas.parentElement; const r = parent.getBoundingClientRect(); canvas.width = r.width; canvas.height = r.height; }
 function animateStars() { ctx.clearRect(0, 0, canvas.width, canvas.height); stars.forEach(s => { s.update(canvas.width, canvas.height, stars); s.draw(ctx); }); requestAnimationFrame(animateStars); }
-async function addStar(save = true) {
-    if (stars.length < MAX_STARS) {
-        const spawnWidth = canvas.width - (INNER_PADDING * 2) - 40; 
-        const randomX = (canvas.width / 2) + (Math.random() - 0.5) * spawnWidth;
-        stars.push(new Star(randomX, -20, 9)); 
-        
-        if (save) {
-            localStorage.setItem('oneneStarCount', stars.length);
-            const today = new Date().toLocaleDateString();
-            localStorage.setItem('oneneLastDate', today);
-            
-            // 【新增】同步星星數量到雲端
-            if (typeof pb !== 'undefined' && pb.authStore.isValid) {
-                try {
-                    await pb.collection('users').update(pb.authStore.model.id, {
-                        starCount: stars.length,
-                        lastDate: today
-                    });
-                } catch (e) { console.log("星星同步失敗", e); }
-            }
-        }
-    }
-}
-
-function startStarTimer() { 
-    longPressTimer = setTimeout(async () => { 
-        if (confirm("要清空累積的繁星能量嗎？")) { 
-            stars = []; 
-            localStorage.setItem('oneneStarCount', 0); 
-            // 【新增】同步清空狀態到雲端
-            if (typeof pb !== 'undefined' && pb.authStore.isValid) {
-                try {
-                    await pb.collection('users').update(pb.authStore.model.id, { starCount: 0 });
-                } catch (e) {}
-            }
-        } 
-    }, 3000); 
-}
-
 function triggerStarReward() { addStar(true); }
 function checkDailyDecay() {
     const today = new Date().toLocaleDateString(); const lastDate = localStorage.getItem('oneneLastDate'); let savedCount = parseInt(localStorage.getItem('oneneStarCount') || '0');
