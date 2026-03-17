@@ -513,10 +513,26 @@
 // Theme Switcher Logic
 // ==========================================
 function toggleThemeMenu(e) { e.stopPropagation(); document.getElementById('theme-switcher').classList.toggle('expanded'); }
-function setTheme(themeName, iconName) {
-    if (themeName === 'default') { document.documentElement.removeAttribute('data-theme'); } else { document.documentElement.setAttribute('data-theme', themeName); }
-    document.getElementById('current-theme-icon').innerText = iconName; document.getElementById('theme-switcher').classList.remove('expanded');
-    localStorage.setItem('oneneSavedTheme', themeName); localStorage.setItem('oneneSavedThemeIcon', iconName);
+async function setTheme(themeName, iconName) {
+    // 1. 改變畫面
+    if (themeName === 'default') { document.documentElement.removeAttribute('data-theme'); } 
+    else { document.documentElement.setAttribute('data-theme', themeName); }
+    document.getElementById('current-theme-icon').innerText = iconName; 
+    document.getElementById('theme-switcher').classList.remove('expanded');
+    
+    // 2. 存入本地端
+    localStorage.setItem('oneneSavedTheme', themeName); 
+    localStorage.setItem('oneneSavedThemeIcon', iconName);
+
+    // 3. 【新增】如果已登入，同步到雲端資料庫
+    if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+        try {
+            await pb.collection('users').update(pb.authStore.model.id, {
+                theme: themeName,
+                themeIcon: iconName
+            });
+        } catch (e) { console.log("主題同步失敗", e); }
+    }
 }
 document.addEventListener('click', (e) => { const switcher = document.getElementById('theme-switcher'); if (switcher && switcher.classList.contains('expanded') && !switcher.contains(e.target)) { switcher.classList.remove('expanded'); } });
 
@@ -558,12 +574,45 @@ class Star {
 }
 function initCanvas() { const parent = canvas.parentElement; const r = parent.getBoundingClientRect(); canvas.width = r.width; canvas.height = r.height; }
 function animateStars() { ctx.clearRect(0, 0, canvas.width, canvas.height); stars.forEach(s => { s.update(canvas.width, canvas.height, stars); s.draw(ctx); }); requestAnimationFrame(animateStars); }
-function addStar(save = true) {
+async function addStar(save = true) {
     if (stars.length < MAX_STARS) {
-        const spawnWidth = canvas.width - (INNER_PADDING * 2) - 40; const randomX = (canvas.width / 2) + (Math.random() - 0.5) * spawnWidth;
-        stars.push(new Star(randomX, -20, 9)); if (save) localStorage.setItem('oneneStarCount', stars.length);
+        const spawnWidth = canvas.width - (INNER_PADDING * 2) - 40; 
+        const randomX = (canvas.width / 2) + (Math.random() - 0.5) * spawnWidth;
+        stars.push(new Star(randomX, -20, 9)); 
+        
+        if (save) {
+            localStorage.setItem('oneneStarCount', stars.length);
+            const today = new Date().toLocaleDateString();
+            localStorage.setItem('oneneLastDate', today);
+            
+            // 【新增】同步星星數量到雲端
+            if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+                try {
+                    await pb.collection('users').update(pb.authStore.model.id, {
+                        starCount: stars.length,
+                        lastDate: today
+                    });
+                } catch (e) { console.log("星星同步失敗", e); }
+            }
+        }
     }
 }
+
+function startStarTimer() { 
+    longPressTimer = setTimeout(async () => { 
+        if (confirm("要清空累積的繁星能量嗎？")) { 
+            stars = []; 
+            localStorage.setItem('oneneStarCount', 0); 
+            // 【新增】同步清空狀態到雲端
+            if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+                try {
+                    await pb.collection('users').update(pb.authStore.model.id, { starCount: 0 });
+                } catch (e) {}
+            }
+        } 
+    }, 3000); 
+}
+
 function triggerStarReward() { addStar(true); }
 function checkDailyDecay() {
     const today = new Date().toLocaleDateString(); const lastDate = localStorage.getItem('oneneLastDate'); let savedCount = parseInt(localStorage.getItem('oneneStarCount') || '0');
@@ -574,7 +623,45 @@ function pourStars() {
     const targetCount = checkDailyDecay(); let currentPoured = 0;
     if (targetCount > 0) { const interval = setInterval(() => { if (currentPoured < targetCount) { addStar(false); currentPoured++; } else { clearInterval(interval); } }, 60); }
 }
-function startStarTimer() { longPressTimer = setTimeout(() => { if (confirm("要清空累積的繁星能量嗎？")) { stars = []; localStorage.setItem('oneneStarCount', 0); } }, 3000); }
+async function addStar(save = true) {
+    if (stars.length < MAX_STARS) {
+        const spawnWidth = canvas.width - (INNER_PADDING * 2) - 40; 
+        const randomX = (canvas.width / 2) + (Math.random() - 0.5) * spawnWidth;
+        stars.push(new Star(randomX, -20, 9)); 
+        
+        if (save) {
+            localStorage.setItem('oneneStarCount', stars.length);
+            const today = new Date().toLocaleDateString();
+            localStorage.setItem('oneneLastDate', today);
+            
+            // 【新增】同步星星數量到雲端
+            if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+                try {
+                    await pb.collection('users').update(pb.authStore.model.id, {
+                        starCount: stars.length,
+                        lastDate: today
+                    });
+                } catch (e) { console.log("星星同步失敗", e); }
+            }
+        }
+    }
+}
+
+function startStarTimer() { 
+    longPressTimer = setTimeout(async () => { 
+        if (confirm("要清空累積的繁星能量嗎？")) { 
+            stars = []; 
+            localStorage.setItem('oneneStarCount', 0); 
+            // 【新增】同步清空狀態到雲端
+            if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+                try {
+                    await pb.collection('users').update(pb.authStore.model.id, { starCount: 0 });
+                } catch (e) {}
+            }
+        } 
+    }, 3000); 
+}
+
 function clearStarTimer() { clearTimeout(longPressTimer); }
 window.addEventListener('resize', initCanvas);
 
@@ -1230,13 +1317,46 @@ function initAuth() {
     const logoutBtn = document.getElementById('logout-btn');
     const userStatus = document.getElementById('user-status');
 
+    // 【新增】從雲端下載資料並套用的函數
+    function syncDataFromDB() {
+        const user = pb.authStore.model;
+        if (!user) return;
+
+        // 還原主題
+        if (user.theme && user.theme !== '') {
+            localStorage.setItem('oneneSavedTheme', user.theme);
+            localStorage.setItem('oneneSavedThemeIcon', user.themeIcon || 'palette');
+            if (user.theme === 'default') document.documentElement.removeAttribute('data-theme');
+            else document.documentElement.setAttribute('data-theme', user.theme);
+            document.getElementById('current-theme-icon').innerText = user.themeIcon || 'palette';
+        }
+
+        // 還原星星
+        if (user.starCount !== undefined && user.starCount !== null) {
+            localStorage.setItem('oneneStarCount', user.starCount);
+            if (user.lastDate) localStorage.setItem('oneneLastDate', user.lastDate);
+            // 重新掉落正確數量的星星
+            stars = []; // 先清空畫面上的
+            let count = user.starCount;
+            const today = new Date().toLocaleDateString();
+            // 計算衰減
+            if (user.lastDate && user.lastDate !== today && count > 0) {
+                count = Math.floor(count * 0.7);
+                // 順便把衰減後的值更新回雲端
+                pb.collection('users').update(user.id, { starCount: count, lastDate: today });
+            }
+            for(let i=0; i<count; i++) addStar(false);
+        }
+    }
+
     function checkLoginStatus() {
         if (pb.authStore.isValid) {
-            // 擷取信箱 @ 前面的字串當作暱稱
             const nickname = pb.authStore.model.email.split('@')[0];
             userStatus.innerText = `能量使者：${nickname}`;
             loginBtn.style.display = 'none';
             logoutBtn.style.display = 'block';
+            // 檢查狀態時順便同步資料
+            syncDataFromDB();
         } else {
             userStatus.innerText = '尚未登入';
             loginBtn.style.display = 'block';
@@ -1253,26 +1373,33 @@ function initAuth() {
         try {
             await pb.collection('users').authWithPassword(email, password);
             alert('登入成功！歡迎回來補充能量。');
+            checkLoginStatus();
         } catch (err) {
             try {
+                // 註冊時順便把目前的本地端設定傳上去
                 await pb.collection('users').create({
                     email: email,
                     password: password,
-                    passwordConfirm: password
+                    passwordConfirm: password,
+                    theme: localStorage.getItem('oneneSavedTheme') || 'default',
+                    themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
+                    starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),
+                    lastDate: new Date().toLocaleDateString()
                 });
                 await pb.collection('users').authWithPassword(email, password);
-                alert('註冊成功！已經為您建立專屬帳號。');
+                alert('註冊成功！已經為您建立專屬帳號並備份當前進度。');
+                checkLoginStatus();
             } catch (registerErr) {
                 alert('登入/註冊失敗。請檢查信箱格式，或確保密碼超過 8 個字元喔！');
             }
         }
-        checkLoginStatus();
     });
 
     logoutBtn.addEventListener('click', () => {
         pb.authStore.clear();
         alert('已登出，期待您下次再來！');
-        checkLoginStatus();
+        // 登出後重新整理頁面，恢復成未登入的乾淨狀態
+        window.location.reload(); 
     });
 
     checkLoginStatus();
