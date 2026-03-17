@@ -633,8 +633,30 @@ window.addEventListener('resize', initCanvas);
 // ==========================================
 // 1. Data & Library
 // ==========================================
-const QUOTES_LIBRARY = ["專注當下，能量隨之而來", "保持純粹，世界會為這個努力的人開路", "你的光芒，無需他人定義", "相信直覺，那是靈魂的指引", "做喜歡的事，能量源源不絕"];
-const ANSWERS_LIBRARY = ["就是現在，去做吧", "結果會讓你驚喜", "換個角度思考", "傾聽內心的聲音", "放下執著，反而會得到", "當你準備好，機會就會出現", "耐心是另一種力量", "不必急於一時，靜候轉機", "勇敢跨出那一步", "內在的平衡會帶領你"];
+// 1. 將常數 (const) 改為變數 (let)，並保留幾個預設值（以防網路連線太慢時畫面空白）
+let QUOTES_LIBRARY = ["能量讀取中...", "請保持平靜..."];
+let ANSWERS_LIBRARY = ["翻閱命運中...", "請傾聽內心..."];
+
+// 2. 建立一個專門去後端「抓字」的非同步函數
+async function fetchDynamicContent() {
+    try {
+        // 抓取能量小語 (quotes)
+        const quotesData = await pb.collection('quotes').getFullList({ requestKey: null });
+        if (quotesData.length > 0) {
+            QUOTES_LIBRARY = quotesData.map(record => record.text);
+            // 抓到資料後，立刻呼叫畫面更新目前的句子
+            if (window.appInstance) window.appInstance.updateQuote();
+        }
+
+        // 抓取答案之書 (answers)
+        const answersData = await pb.collection('answers').getFullList({ requestKey: null });
+        if (answersData.length > 0) {
+            ANSWERS_LIBRARY = answersData.map(record => record.text);
+        }
+    } catch (error) {
+        console.log("從雲端載入字庫失敗，繼續使用預設值", error);
+    }
+}
 const MEDITATION_GUIDES = [ "感受氣流緩緩進入鼻腔，帶走焦慮", "想像全身肌肉像冰淇淋一樣慢慢融化", "將意念放在心輪，感受溫暖的光芒", "釋放肩頸的緊繃，回歸內在的中心", "每一次吐氣，都在排空不屬於你的負擔", "現在的你，擁有最強大的平靜能量" ];
 const MOOD_CONFIG = {
     '火大': { guides: ['覺察：在心裡對自己說「我看見憤怒」','接納：只是觀察憤怒的溫度，不對抗','熄火：深長吐氣 3 次，想像火焰排出'] },
@@ -1395,10 +1417,17 @@ function initAuth() {
 document.addEventListener("DOMContentLoaded", () => {
     loadSettings();
     initCanvas(); pourStars(); animateStars();
-    const app = new App(SITE_DATA); app.init();
+    
+    // 初始化 App，並把它存到 window 變數中，讓抓字函數可以呼叫它來更新畫面
+    const app = new App(SITE_DATA); 
+    window.appInstance = app; 
+    app.init();
     
     // 啟動會員系統
     initAuth();
+    
+    // 🚀 網頁一打開，立刻派機器人去後端抓最新的字庫
+    fetchDynamicContent();
 });
 </script>
 </body>
