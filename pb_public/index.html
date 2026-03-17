@@ -1319,22 +1319,40 @@ document.body.addEventListener('click', (e) => {
 // ==========================================
 // 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
 // 讓系統自動偵測目前的網址，永遠不會連錯！
-const pb = new PocketBase(window.location.origin);
+    const pb = new PocketBase(window.location.origin);
 
-// Google 登入按鈕
-if (googleLoginBtn) {
-    googleLoginBtn.addEventListener('click', async () => {
-        try {
-            // v0.21.5 版的 SDK 會正確讀取伺服器的 authProviders
-            await pb.collection('users').authWithOAuth2({ provider: 'google' });
-            alert('Google 登入成功！');
-            checkLoginStatus();
-        } catch (err) {
-            console.error("登入錯誤:", err);
-            alert('登入失敗，請稍後再試。');
+function initAuth() {
+    const loginBtn = document.getElementById('login-btn');
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const userStatus = document.getElementById('user-status');
+
+    // 從雲端下載資料並套用的函數
+    function syncDataFromDB() {
+        const user = pb.authStore.model;
+        if (!user) return;
+
+        if (user.theme && user.theme !== '') {
+            localStorage.setItem('oneneSavedTheme', user.theme);
+            localStorage.setItem('oneneSavedThemeIcon', user.themeIcon || 'palette');
+            if (user.theme === 'default') document.documentElement.removeAttribute('data-theme');
+            else document.documentElement.setAttribute('data-theme', user.theme);
+            document.getElementById('current-theme-icon').innerText = user.themeIcon || 'palette';
         }
-    });
-}
+
+        if (user.starCount !== undefined && user.starCount !== null) {
+            localStorage.setItem('oneneStarCount', user.starCount);
+            if (user.lastDate) localStorage.setItem('oneneLastDate', user.lastDate);
+            stars = []; 
+            let count = user.starCount;
+            const today = new Date().toLocaleDateString();
+            if (user.lastDate && user.lastDate !== today && count > 0) {
+                count = Math.floor(count * 0.7);
+                pb.collection('users').update(user.id, { starCount: count, lastDate: today });
+            }
+            for(let i=0; i<count; i++) addStar(false);
+        }
+    }
 
     // 檢查登入狀態與畫面切換
     function checkLoginStatus() {
