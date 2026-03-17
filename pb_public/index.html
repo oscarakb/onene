@@ -1318,7 +1318,8 @@ document.body.addEventListener('click', (e) => {
 // PocketBase 會員系統邏輯
 // ==========================================
 // 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
-const pb = new PocketBase('https://onene.up.railway.app/');
+// 讓系統自動偵測目前的網址，永遠不會連錯！
+    const pb = new PocketBase('/');
 
 function initAuth() {
     const loginBtn = document.getElementById('login-btn');
