@@ -641,23 +641,55 @@ let QUOTES_LIBRARY = ["能量讀取中...", "請保持平靜..."];
 let ANSWERS_LIBRARY = ["翻閱命運中...", "請傾聽內心..."];
 
 // 2. 建立一個專門去後端「抓字」的非同步函數
+// 建立一個專門去後端「抓資料」的非同步函數
 async function fetchDynamicContent() {
     try {
-        // 抓取能量小語 (quotes)
+        // 1. 抓取能量小語 (quotes)
         const quotesData = await pb.collection('quotes').getFullList({ requestKey: null });
         if (quotesData.length > 0) {
             QUOTES_LIBRARY = quotesData.map(record => record.text);
-            // 抓到資料後，立刻呼叫畫面更新目前的句子
             if (window.appInstance) window.appInstance.updateQuote();
         }
 
-        // 抓取答案之書 (answers)
+        // 2. 抓取答案之書 (answers)
         const answersData = await pb.collection('answers').getFullList({ requestKey: null });
         if (answersData.length > 0) {
             ANSWERS_LIBRARY = answersData.map(record => record.text);
         }
+
+        // 🚀 3. 抓取首頁的模組卡片 (cards)
+        // filter: 'isActive = true' 代表只抓取有開啟的卡片
+        // sort: 'sortOrder' 代表依照你設定的數字排序
+        const cardsData = await pb.collection('cards').getFullList({ 
+            filter: 'isActive = true',
+            sort: 'sortOrder',
+            requestKey: null 
+        });
+        
+        if (cardsData.length > 0) {
+            // 將後端資料轉換為前端需要的格式
+            const dynamicCards = cardsData.map(record => ({
+                id: record.cardId,
+                type: record.type,
+                color: record.color,
+                variant: record.variant,
+                icon: record.icon,
+                title: record.title,
+                subtitle: record.subtitle,
+                action: record.action
+            }));
+            
+            // 替換掉原本的預設卡片
+            SITE_DATA.sections[0].cards = dynamicCards;
+            
+            // 命令 App 重新畫出最新的首頁
+            if (window.appInstance) {
+                window.appInstance.data = SITE_DATA; 
+                window.appInstance.renderSections(); 
+            }
+        }
     } catch (error) {
-        console.log("從雲端載入字庫失敗，繼續使用預設值", error);
+        console.log("從雲端載入資料失敗，繼續使用預設值", error);
     }
 }
 const MEDITATION_GUIDES = [ "感受氣流緩緩進入鼻腔，帶走焦慮", "想像全身肌肉像冰淇淋一樣慢慢融化", "將意念放在心輪，感受溫暖的光芒", "釋放肩頸的緊繃，回歸內在的中心", "每一次吐氣，都在排空不屬於你的負擔", "現在的你，擁有最強大的平靜能量" ];
@@ -668,17 +700,11 @@ const MOOD_CONFIG = {
     '低落': { guides: ['親近：喝口水感受水流過喉嚨的溫柔溫度','溫暖：雙手交叉環抱，給自己一個擁抱','希望：望向窗外最遠處，讓視覺開闊'] },
     '平靜': { guides: ['感恩：感謝身體在此刻提供的平衡','深耕：觀察平靜在身體哪個部位最明顯','分享：將美好頻率，從心底分享給世界'] }
 };
-const SITE_DATA = {
+let SITE_DATA = {
     sections: [
         {
             cards: [
-                { id: 'c1', type: 'rect', color: 'purple', variant: 'filled', icon: 'auto_stories', title: '答案之書', subtitle: '集中精神➜默念問題➜點擊抽答案', action: 'AnswerBookController' },
-                { id: 'c10', type: 'rect', color: 'blue', variant: 'filled', icon: 'delete_sweep', title: '心情斷捨離', subtitle: '分箱過濾，截斷負能量', action: 'MindCleanController' },
-                { id: 'c11', type: 'rect', color: 'yellow', variant: 'filled', icon: 'bolt', title: '集氣能量球', subtitle: '長按注入專注與動力', action: 'OrbController' },
-                { id: 'c4', type: 'rect', color: 'red', variant: 'filled', icon: 'medical_services', title: '情緒急救箱', subtitle: '點擊選擇心情，獲取三步治癒對策', action: 'MoodController' },
-                { id: 'c5', type: 'rect', color: 'green', variant: 'filled', icon: 'air', title: '444 減壓呼吸練習', subtitle: '釋放焦慮，找回內在平靜', action: 'BreathController' },
-                { id: 'c7', type: 'rect', color: 'blue', variant: 'filled', icon: 'visibility', title: '眼球放鬆操', subtitle: '跟隨圓球移動，舒緩眼部疲勞', action: 'EyeTrackerController' },
-                { id: 'c6', type: 'rect', color: 'pink', variant: 'filled', icon: 'blur_on', title: '減壓氣泡紙', subtitle: '無限次捏捏的療癒快感', action: 'BubbleController' }
+                { id: 'c1', type: 'rect', color: 'purple', variant: 'filled', icon: 'auto_stories', title: '答案之書', subtitle: '載入中...', action: 'AnswerBookController' }
             ]
         }
     ]
