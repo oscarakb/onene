@@ -1396,10 +1396,15 @@ function initAuth() {
     });
 
     logoutBtn.addEventListener('click', () => {
-        pb.authStore.clear();
+        pb.authStore.clear(); // 清除登入狀態
+        
+        // 【新增】登出時順便把本機的星星跟主題清空，讓訪客模式保持乾淨
+        localStorage.removeItem('oneneStarCount');
+        localStorage.removeItem('oneneSavedTheme');
+        localStorage.removeItem('oneneSavedThemeIcon');
+        
         alert('已登出，期待您下次再來！');
-        // 登出後重新整理頁面，恢復成未登入的乾淨狀態
-        window.location.reload(); 
+        window.location.reload(); // 重新整理畫面
     });
 
     checkLoginStatus();
