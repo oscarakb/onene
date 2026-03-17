@@ -302,11 +302,11 @@
         if (initTheme && initTheme !== 'default') {
             document.documentElement.setAttribute('data-theme', initTheme);
         }
-    </script>
+</script>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
-</head>
+
 <div class="container">
     <aside class="sidebar">
         <div class="brand-card">
@@ -337,24 +337,14 @@
                 <span class="motto">STAY PURE · STAY BRAVE</span>
             </div>
         </div>
-        <aside class="sidebar">
-        <div class="brand-card">
-            <div class="brand-content-wrapper" id="reset-target" 
-                 onmousedown="startStarTimer()" onmouseup="clearStarTimer()" 
-                 ontouchstart="startStarTimer()" ontouchend="clearStarTimer()">
-                <img src="https://i.ibb.co/Z62svXTY/9.jpg" alt="Logo" class="logo-img">
-                <h1 class="brand-ch">昂昂向上</h1>
-                <span class="motto">STAY PURE · STAY BRAVE</span>
-            </div>
-        </div>
         
         <div class="auth-card" style="background: var(--card-bg); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); transition: background-color 0.4s, border-color 0.4s;">
             <div id="user-status" style="font-size: 0.9rem; font-weight: 700; color: var(--onene-blue);">尚未登入</div>
             <button id="login-btn" style="background: var(--onene-yellow); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登入 / 註冊</button>
             <button id="logout-btn" style="display: none; background: var(--text-muted); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登出</button>
         </div>
-        </aside>
     </aside>
+    
     <main id="main-content-list" style="flex: 1;"></main>
 </div>
 
@@ -1229,11 +1219,6 @@ document.body.addEventListener('click', (e) => {
     }
 }, true);
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadSettings();
-    initCanvas(); pourStars(); animateStars();
-    const app = new App(SITE_DATA); app.init();
-});
 // ==========================================
 // PocketBase 會員系統邏輯
 // ==========================================
