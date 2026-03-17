@@ -305,7 +305,7 @@
 </script>
 </head>
 <body>
-<script src="https://unpkg.com/pocketbase@0.22.1/dist/pocketbase.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.22.0/dist/pocketbase.umd.js"></script>
 
 <div class="container">
     <aside class="sidebar">
@@ -1319,7 +1319,7 @@ document.body.addEventListener('click', (e) => {
 // ==========================================
 // 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
 // 讓系統自動偵測目前的網址，永遠不會連錯！
-    const pb = new PocketBase('/');
+    const pb = new PocketBase('https://onene.up.railway.app');
 
 function initAuth() {
     const loginBtn = document.getElementById('login-btn');
