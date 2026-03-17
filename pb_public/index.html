@@ -778,6 +778,16 @@ class App {
     findCardData(id) { for (const sec of this.data.sections) { const card = sec.cards.find(c => c.id === id); if (card) return card; } return null; }
 }
 
+// 初始化讀取本地端設定開關
+function loadSettings() {
+    document.getElementById('toggle-sound').checked = localStorage.getItem('oneneSoundEnabled') !== 'false';
+    document.getElementById('toggle-vibration').checked = localStorage.getItem('oneneVibrationEnabled') !== 'false';
+    document.getElementById('toggle-fullscreen-default').checked = localStorage.getItem('oneneFullscreenDefault') === 'true';
+}
+
+// 儲存設定並同步至雲端
+async function saveSettings() {
+
 // ==========================================
 // Settings Modal & Toggle Logic
 // ==========================================
@@ -845,6 +855,8 @@ function initAuth() {
                 for(let i = 0; i < count; i++) {
                     addStar(false); // 畫出星星 (false 代表純畫圖，不要觸發 API)
                 }
+        }
+
         // 🚀 新增：同步三項設定開關
         if (user.soundEnabled !== undefined && user.soundEnabled !== null) {
             localStorage.setItem('oneneSoundEnabled', user.soundEnabled);
@@ -902,7 +914,7 @@ function initAuth() {
                     theme: localStorage.getItem('oneneSavedTheme') || 'default',
                     themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
                     starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),
-                    lastDate: new Date().toLocaleDateString()
+                    lastDate: new Date().toLocaleDateString(),
                     // 🚀 註冊時，一併把當下的設定開關存給新帳號
                     soundEnabled: document.getElementById('toggle-sound').checked,
                     vibEnabled: document.getElementById('toggle-vibration').checked,
