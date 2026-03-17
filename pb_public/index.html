@@ -643,24 +643,27 @@ let ANSWERS_LIBRARY = ["翻閱命運中...", "請傾聽內心..."];
 
 // 2. 建立一個專門去後端「抓字」的非同步函數
 // 建立一個專門去後端「抓資料」的非同步函數
+// 建立一個專門去後端「抓資料」的非同步函數 (獨立防呆版)
 async function fetchDynamicContent() {
+    // 1. 抓取能量小語 (失敗不影響其他)
     try {
-        // 1. 抓取能量小語 (quotes)
         const quotesData = await pb.collection('quotes').getFullList({ requestKey: null });
         if (quotesData.length > 0) {
             QUOTES_LIBRARY = quotesData.map(record => record.text);
             if (window.appInstance) window.appInstance.updateQuote();
         }
+    } catch (e) { console.log("小語載入失敗，使用預設值"); }
 
-        // 2. 抓取答案之書 (answers)
+    // 2. 抓取答案之書
+    try {
         const answersData = await pb.collection('answers').getFullList({ requestKey: null });
         if (answersData.length > 0) {
             ANSWERS_LIBRARY = answersData.map(record => record.text);
         }
+    } catch (e) { console.log("答案之書載入失敗，使用預設值"); }
 
-        // 🚀 3. 抓取首頁的模組卡片 (cards)
-        // filter: 'isActive = true' 代表只抓取有開啟的卡片
-        // sort: 'sortOrder' 代表依照你設定的數字排序
+    // 🚀 3. 抓取首頁的模組卡片
+    try {
         const cardsData = await pb.collection('cards').getFullList({ 
             filter: 'isActive = true',
             sort: 'sortOrder',
@@ -668,7 +671,6 @@ async function fetchDynamicContent() {
         });
         
         if (cardsData.length > 0) {
-            // 將後端資料轉換為前端需要的格式
             const dynamicCards = cardsData.map(record => ({
                 id: record.cardId,
                 type: record.type,
@@ -680,19 +682,18 @@ async function fetchDynamicContent() {
                 action: record.action
             }));
             
-            // 替換掉原本的預設卡片
             SITE_DATA.sections[0].cards = dynamicCards;
             
-            // 命令 App 重新畫出最新的首頁
             if (window.appInstance) {
                 window.appInstance.data = SITE_DATA; 
                 window.appInstance.renderSections(); 
             }
         }
-    } catch (error) {
-        console.log("從雲端載入資料失敗，繼續使用預設值", error);
+    } catch (e) { 
+        console.error("卡片載入失敗，請檢查 PocketBase 設定", e); 
     }
 }
+
 const MEDITATION_GUIDES = [ "感受氣流緩緩進入鼻腔，帶走焦慮", "想像全身肌肉像冰淇淋一樣慢慢融化", "將意念放在心輪，感受溫暖的光芒", "釋放肩頸的緊繃，回歸內在的中心", "每一次吐氣，都在排空不屬於你的負擔", "現在的你，擁有最強大的平靜能量" ];
 const MOOD_CONFIG = {
     '火大': { guides: ['覺察：在心裡對自己說「我看見憤怒」','接納：只是觀察憤怒的溫度，不對抗','熄火：深長吐氣 3 次，想像火焰排出'] },
@@ -806,46 +807,6 @@ function loadSettings() {
     document.getElementById('toggle-vibration').checked = isVibOn;
     document.getElementById('toggle-fullscreen-default').checked = isFsDefault;
 }
-
-const originalPlayTone = OrbController.prototype.playTone;
-OrbController.prototype.playTone = function(freq, dur, vol) {
-    if (localStorage.getItem('oneneSoundEnabled') === 'false') return;
-    const ctx = getAudioCtx(); if(!ctx) return; 
-    const osc = ctx.createOscillator(); const g = ctx.createGain(); 
-    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime); 
-    g.gain.setValueAtTime(vol, ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur); 
-    osc.connect(g); g.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + dur); 
-};
-
-BubbleController.prototype.pop = function(bubbleEl) {
-    if(bubbleEl.classList.contains('is-popped')) return;
-    const ctx = getAudioCtx();
-    if(ctx && localStorage.getItem('oneneSoundEnabled') !== 'false') { 
-        const osc = ctx.createOscillator(); const gain = ctx.createGain(); 
-        osc.frequency.setValueAtTime(800 + Math.random() * 200, ctx.currentTime); 
-        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.1); 
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1); 
-        osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.1); 
-    }
-    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && "vibrate" in navigator) { navigator.vibrate(15); }
-    bubbleEl.classList.add('is-popped'); this.poppedCount++; 
-    if (this.poppedCount === 25) { triggerStarReward(); }
-};
-
-MindCleanController.prototype.triggerRitual = function(btnEl, callback) {
-    btnEl.classList.add('ritual-animating'); 
-    const halo = btnEl.previousElementSibling; 
-    if (halo && halo.classList.contains('btn-halo')) { halo.style.display = 'none'; }
-    const ctx = getAudioCtx(); 
-    if(ctx && localStorage.getItem('oneneSoundEnabled') !== 'false') { 
-        const osc = ctx.createOscillator(); const gain = ctx.createGain(); 
-        osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
-        gain.gain.setValueAtTime(0.2, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2); 
-        osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 1.2); 
-    }
-    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && "vibrate" in navigator) { navigator.vibrate([30, 50, 30]); }
-    setTimeout(() => { callback(); }, 800);
-};
 
 document.body.addEventListener('click', (e) => {
     const isAction = e.target.closest('[data-action]');
