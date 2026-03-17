@@ -305,7 +305,8 @@
     </script>
 </head>
 <body>
-
+<script src="https://cdn.jsdelivr.net/gh/pocketbase/js-sdk@master/dist/pocketbase.umd.js"></script>
+</head>
 <div class="container">
     <aside class="sidebar">
         <div class="brand-card">
@@ -336,6 +337,23 @@
                 <span class="motto">STAY PURE · STAY BRAVE</span>
             </div>
         </div>
+        <aside class="sidebar">
+        <div class="brand-card">
+            <div class="brand-content-wrapper" id="reset-target" 
+                 onmousedown="startStarTimer()" onmouseup="clearStarTimer()" 
+                 ontouchstart="startStarTimer()" ontouchend="clearStarTimer()">
+                <img src="https://i.ibb.co/Z62svXTY/9.jpg" alt="Logo" class="logo-img">
+                <h1 class="brand-ch">昂昂向上</h1>
+                <span class="motto">STAY PURE · STAY BRAVE</span>
+            </div>
+        </div>
+        
+        <div class="auth-card" style="background: var(--card-bg); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); transition: background-color 0.4s, border-color 0.4s;">
+            <div id="user-status" style="font-size: 0.9rem; font-weight: 700; color: var(--onene-blue);">尚未登入</div>
+            <button id="login-btn" style="background: var(--onene-yellow); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登入 / 註冊</button>
+            <button id="logout-btn" style="display: none; background: var(--text-muted); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登出</button>
+        </div>
+        </aside>
     </aside>
     <main id="main-content-list" style="flex: 1;"></main>
 </div>
@@ -1215,6 +1233,73 @@ document.addEventListener("DOMContentLoaded", () => {
     loadSettings();
     initCanvas(); pourStars(); animateStars();
     const app = new App(SITE_DATA); app.init();
+});
+// ==========================================
+// PocketBase 會員系統邏輯
+// ==========================================
+// 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
+const pb = new PocketBase('https://你的專屬網址.up.railway.app');
+
+function initAuth() {
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const userStatus = document.getElementById('user-status');
+
+    function checkLoginStatus() {
+        if (pb.authStore.isValid) {
+            // 擷取信箱 @ 前面的字串當作暱稱
+            const nickname = pb.authStore.model.email.split('@')[0];
+            userStatus.innerText = `能量使者：${nickname}`;
+            loginBtn.style.display = 'none';
+            logoutBtn.style.display = 'block';
+        } else {
+            userStatus.innerText = '尚未登入';
+            loginBtn.style.display = 'block';
+            logoutBtn.style.display = 'none';
+        }
+    }
+
+    loginBtn.addEventListener('click', async () => {
+        const email = prompt('請輸入信箱：');
+        if (!email) return;
+        const password = prompt('請輸入密碼 (至少需要 8 個字元)：');
+        if (!password) return;
+
+        try {
+            await pb.collection('users').authWithPassword(email, password);
+            alert('登入成功！歡迎回來補充能量。');
+        } catch (err) {
+            try {
+                await pb.collection('users').create({
+                    email: email,
+                    password: password,
+                    passwordConfirm: password
+                });
+                await pb.collection('users').authWithPassword(email, password);
+                alert('註冊成功！已經為您建立專屬帳號。');
+            } catch (registerErr) {
+                alert('登入/註冊失敗。請檢查信箱格式，或確保密碼超過 8 個字元喔！');
+            }
+        }
+        checkLoginStatus();
+    });
+
+    logoutBtn.addEventListener('click', () => {
+        pb.authStore.clear();
+        alert('已登出，期待您下次再來！');
+        checkLoginStatus();
+    });
+
+    checkLoginStatus();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadSettings();
+    initCanvas(); pourStars(); animateStars();
+    const app = new App(SITE_DATA); app.init();
+    
+    // 啟動會員系統
+    initAuth();
 });
 </script>
 </body>
