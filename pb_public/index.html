@@ -338,10 +338,18 @@
             </div>
         </div>
         
-        <div class="auth-card" style="background: var(--card-bg); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); transition: background-color 0.4s, border-color 0.4s;">
-            <div id="user-status" style="font-size: 0.9rem; font-weight: 700; color: var(--onene-blue);">尚未登入</div>
-            <button id="login-btn" style="background: var(--onene-yellow); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登入 / 註冊</button>
-            <button id="logout-btn" style="display: none; background: var(--text-muted); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登出</button>
+<div class="auth-card" style="background: var(--card-bg); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); transition: background-color 0.4s, border-color 0.4s; flex-wrap: wrap; gap: 10px;">
+            <div id="user-status" style="font-size: 0.9rem; font-weight: 700; color: var(--onene-blue); width: 100%;">尚未登入</div>
+            <div style="display: flex; gap: 8px;">
+                <button id="login-btn" style="background: var(--onene-yellow); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">信箱登入</button>
+                
+                <button id="google-login-btn" style="background: #fff; color: #444; border: 1px solid #ddd; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 16px; height: 16px;">
+                    Google
+                </button>
+                
+                <button id="logout-btn" style="display: none; background: var(--text-muted); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">登出</button>
+            </div>
         </div>
     </aside>
     
@@ -1314,15 +1322,15 @@ const pb = new PocketBase('https://onene.up.railway.app/');
 
 function initAuth() {
     const loginBtn = document.getElementById('login-btn');
+    const googleLoginBtn = document.getElementById('google-login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const userStatus = document.getElementById('user-status');
 
-    // 【新增】從雲端下載資料並套用的函數
+    // 從雲端下載資料並套用的函數
     function syncDataFromDB() {
         const user = pb.authStore.model;
         if (!user) return;
 
-        // 還原主題
         if (user.theme && user.theme !== '') {
             localStorage.setItem('oneneSavedTheme', user.theme);
             localStorage.setItem('oneneSavedThemeIcon', user.themeIcon || 'palette');
@@ -1331,39 +1339,41 @@ function initAuth() {
             document.getElementById('current-theme-icon').innerText = user.themeIcon || 'palette';
         }
 
-        // 還原星星
         if (user.starCount !== undefined && user.starCount !== null) {
             localStorage.setItem('oneneStarCount', user.starCount);
             if (user.lastDate) localStorage.setItem('oneneLastDate', user.lastDate);
-            // 重新掉落正確數量的星星
-            stars = []; // 先清空畫面上的
+            stars = []; 
             let count = user.starCount;
             const today = new Date().toLocaleDateString();
-            // 計算衰減
             if (user.lastDate && user.lastDate !== today && count > 0) {
                 count = Math.floor(count * 0.7);
-                // 順便把衰減後的值更新回雲端
                 pb.collection('users').update(user.id, { starCount: count, lastDate: today });
             }
             for(let i=0; i<count; i++) addStar(false);
         }
     }
 
+    // 檢查登入狀態與畫面切換
     function checkLoginStatus() {
         if (pb.authStore.isValid) {
-            const nickname = pb.authStore.model.email.split('@')[0];
+            // 如果是 Google 登入，可能沒有密碼，我們抓信箱前綴當暱稱
+            const email = pb.authStore.model.email || '';
+            const nickname = email ? email.split('@')[0] : '能量使者';
+            
             userStatus.innerText = `能量使者：${nickname}`;
             loginBtn.style.display = 'none';
+            if(googleLoginBtn) googleLoginBtn.style.display = 'none'; 
             logoutBtn.style.display = 'block';
-            // 檢查狀態時順便同步資料
             syncDataFromDB();
         } else {
             userStatus.innerText = '尚未登入';
             loginBtn.style.display = 'block';
+            if(googleLoginBtn) googleLoginBtn.style.display = 'flex'; 
             logoutBtn.style.display = 'none';
         }
     }
 
+    // 信箱登入按鈕
     loginBtn.addEventListener('click', async () => {
         const email = prompt('請輸入信箱：');
         if (!email) return;
@@ -1376,7 +1386,6 @@ function initAuth() {
             checkLoginStatus();
         } catch (err) {
             try {
-                // 註冊時順便把目前的本地端設定傳上去
                 await pb.collection('users').create({
                     email: email,
                     password: password,
@@ -1395,18 +1404,31 @@ function initAuth() {
         }
     });
 
+    // Google 登入按鈕
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', async () => {
+            try {
+                await pb.collection('users').authWithOAuth2({ provider: 'google' });
+                alert('Google 登入成功！');
+                checkLoginStatus();
+            } catch (err) {
+                console.log("Google 登入中斷或失敗", err);
+                alert('Google 登入已取消或發生錯誤。');
+            }
+        });
+    }
+
+    // 登出按鈕
     logoutBtn.addEventListener('click', () => {
-        pb.authStore.clear(); // 清除登入狀態
-        
-        // 【新增】登出時順便把本機的星星跟主題清空，讓訪客模式保持乾淨
+        pb.authStore.clear(); 
         localStorage.removeItem('oneneStarCount');
         localStorage.removeItem('oneneSavedTheme');
         localStorage.removeItem('oneneSavedThemeIcon');
-        
         alert('已登出，期待您下次再來！');
-        window.location.reload(); // 重新整理畫面
+        window.location.reload(); 
     });
 
+    // 初始化檢查
     checkLoginStatus();
 }
 
