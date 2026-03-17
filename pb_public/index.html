@@ -600,16 +600,11 @@ async function addStar(save = true) {
         
         if (save) {
             localStorage.setItem('oneneStarCount', stars.length);
-            const today = new Date().toLocaleDateString();
-            localStorage.setItem('oneneLastDate', today);
             
-            // 【新增】同步星星數量到雲端
             if (typeof pb !== 'undefined' && pb.authStore.isValid) {
                 try {
-                    await pb.collection('users').update(pb.authStore.model.id, {
-                        starCount: stars.length,
-                        lastDate: today
-                    });
+                    // 呼叫後端 API，讓後端自己 +1
+                    await pb.send('/api/stars/add', { method: 'POST' });
                 } catch (e) { console.log("星星同步失敗", e); }
             }
         }
@@ -621,11 +616,12 @@ function startStarTimer() {
         if (confirm("要清空累積的繁星能量嗎？")) { 
             stars = []; 
             localStorage.setItem('oneneStarCount', 0); 
-            // 【新增】同步清空狀態到雲端
+            
             if (typeof pb !== 'undefined' && pb.authStore.isValid) {
                 try {
-                    await pb.collection('users').update(pb.authStore.model.id, { starCount: 0 });
-                } catch (e) {}
+                    // 呼叫後端 API 執行清空
+                    await pb.send('/api/stars/clear', { method: 'POST' });
+                } catch (e) { console.log("清空失敗", e); }
             }
         } 
     }, 3000); 
@@ -1302,18 +1298,16 @@ function initAuth() {
         }
 
         if (user.starCount !== undefined && user.starCount !== null) {
-            localStorage.setItem('oneneStarCount', user.starCount);
-            if (user.lastDate) localStorage.setItem('oneneLastDate', user.lastDate);
-            stars = []; 
-            let count = user.starCount;
-            const today = new Date().toLocaleDateString();
-            if (user.lastDate && user.lastDate !== today && count > 0) {
-                count = Math.floor(count * 0.7);
-                pb.collection('users').update(user.id, { starCount: count, lastDate: today });
+                // 後端給多少顆，前端就直接畫多少顆
+                let count = user.starCount;
+                localStorage.setItem('oneneStarCount', count);
+                
+                stars = []; // 先清空畫面
+                for(let i = 0; i < count; i++) {
+                    addStar(false); // 畫出星星 (false 代表純畫圖，不要觸發 API)
+                }
             }
-            for(let i=0; i<count; i++) addStar(false);
         }
-    }
 
     // 檢查登入狀態與畫面切換
     function checkLoginStatus() {
