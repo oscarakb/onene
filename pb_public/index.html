@@ -785,9 +785,6 @@ function loadSettings() {
     document.getElementById('toggle-fullscreen-default').checked = localStorage.getItem('oneneFullscreenDefault') === 'true';
 }
 
-// 儲存設定並同步至雲端
-async function saveSettings() {
-
 // ==========================================
 // Settings Modal & Toggle Logic
 // ==========================================
@@ -872,7 +869,6 @@ function initAuth() {
         }
     
     }
-}
 
     // 檢查登入狀態與畫面切換
     function checkLoginStatus() {
