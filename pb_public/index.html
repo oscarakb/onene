@@ -784,38 +784,31 @@ class App {
 function openModal(modalId) { document.getElementById(modalId).classList.add('is-active'); }
 function closeModal(modalId) { document.getElementById(modalId).classList.remove('is-active'); }
 
-function saveSettings() {
+// 儲存設定並同步至雲端
+async function saveSettings() {
+    // 取得畫面上開關的狀態 (true 或 false)
     const isSoundOn = document.getElementById('toggle-sound').checked;
     const isVibOn = document.getElementById('toggle-vibration').checked;
     const isFsDefault = document.getElementById('toggle-fullscreen-default').checked;
     
+    // 1. 存入本地端瀏覽器
     localStorage.setItem('oneneSoundEnabled', isSoundOn);
     localStorage.setItem('oneneVibrationEnabled', isVibOn);
     localStorage.setItem('oneneFullscreenDefault', isFsDefault);
-}
 
-function loadSettings() {
-    const soundSaved = localStorage.getItem('oneneSoundEnabled');
-    const vibSaved = localStorage.getItem('oneneVibrationEnabled');
-    const fsSaved = localStorage.getItem('oneneFullscreenDefault');
-    
-    const isSoundOn = soundSaved === null ? true : soundSaved === 'true';
-    const isVibOn = vibSaved === null ? true : vibSaved === 'true';
-    const isFsDefault = fsSaved === 'true'; 
-    
-    document.getElementById('toggle-sound').checked = isSoundOn;
-    document.getElementById('toggle-vibration').checked = isVibOn;
-    document.getElementById('toggle-fullscreen-default').checked = isFsDefault;
-}
-
-document.body.addEventListener('click', (e) => {
-    const isAction = e.target.closest('[data-action]');
-    const isCard = e.target.closest('.card');
-    const isUIBtn = e.target.closest('.theme-opt, .theme-toggle-btn, .settings-btn-capsule, .setting-item');
-    if ((isAction || isCard || isUIBtn) && localStorage.getItem('oneneVibrationEnabled') !== 'false' && "vibrate" in navigator) {
-        navigator.vibrate(5); 
+    // 🚀 2. 如果使用者已登入，立刻把這三個開關狀態同步到 PocketBase
+    if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+        try {
+            await pb.collection('users').update(pb.authStore.model.id, {
+                soundEnabled: isSoundOn,
+                vibEnabled: isVibOn,
+                fsDefault: isFsDefault
+            });
+        } catch (e) {
+            console.log("設定同步至雲端失敗", e);
+        }
     }
-}, true);
+}
 
 // ==========================================
 // PocketBase 會員系統邏輯
@@ -852,8 +845,22 @@ function initAuth() {
                 for(let i = 0; i < count; i++) {
                     addStar(false); // 畫出星星 (false 代表純畫圖，不要觸發 API)
                 }
-            }
+        // 🚀 新增：同步三項設定開關
+        if (user.soundEnabled !== undefined && user.soundEnabled !== null) {
+            localStorage.setItem('oneneSoundEnabled', user.soundEnabled);
+            document.getElementById('toggle-sound').checked = user.soundEnabled;
         }
+        if (user.vibEnabled !== undefined && user.vibEnabled !== null) {
+            localStorage.setItem('oneneVibrationEnabled', user.vibEnabled);
+            document.getElementById('toggle-vibration').checked = user.vibEnabled;
+        }
+        if (user.fsDefault !== undefined && user.fsDefault !== null) {
+            localStorage.setItem('oneneFullscreenDefault', user.fsDefault);
+            document.getElementById('toggle-fullscreen-default').checked = user.fsDefault;
+        }
+    
+    }
+}
 
     // 檢查登入狀態與畫面切換
     function checkLoginStatus() {
@@ -896,6 +903,10 @@ function initAuth() {
                     themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
                     starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),
                     lastDate: new Date().toLocaleDateString()
+                    // 🚀 註冊時，一併把當下的設定開關存給新帳號
+                    soundEnabled: document.getElementById('toggle-sound').checked,
+                    vibEnabled: document.getElementById('toggle-vibration').checked,
+                    fsDefault: document.getElementById('toggle-fullscreen-default').checked
                 });
                 await pb.collection('users').authWithPassword(email, password);
                 alert('註冊成功！已經為您建立專屬帳號並備份當前進度。');
