@@ -372,7 +372,12 @@
     </div>
     <div class="modal-body" style="background: var(--bg-light);">
         <div class="settings-list" style="padding: 24px; background: var(--card-bg);">
-            
+ <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.03); padding: 8px 16px; border-radius: 20px;">
+                <button id="stats-prev-month" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 5px;">◀</button>
+                <div id="stats-current-month" style="font-weight: bold; color: var(--onene-purple); font-size: 1.1rem; letter-spacing: 1px;">2026 年 3 月</div>
+                <button id="stats-next-month" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 5px;">▶</button>
+            </div>
+
             <div id="stats-overview" style="display: flex; gap: 15px; margin-bottom: 25px;">
                 <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
                     <div style="font-size: 0.8rem; color: var(--text-muted);">總練習次數</div>
@@ -940,64 +945,76 @@ function initAuth() {
     const viewStatsBtn = document.getElementById('view-stats-btn');
 
 // ==========================================
-    // 🌟 全新：升級版專屬圖表統計 Modal 邏輯
+    // 🌟 終極效能版：按月份讀取的圖表統計 Modal
     // ==========================================
     if (viewStatsBtn) {
-        viewStatsBtn.addEventListener('click', async () => {
+        // 建立一個變數來記住「現在正在看哪個月」
+        let currentReportDate = new Date();
+
+        // 把抓資料畫圖的邏輯獨立成一個函數，方便換月時重複呼叫
+        async function loadMonthlyStats(targetDate) {
             const chartContainer = document.getElementById('stats-chart-container');
             const totalCountEl = document.getElementById('stats-total-count');
+            const monthLabel = document.getElementById('stats-current-month');
+            const nextBtn = document.getElementById('stats-next-month');
             
-            // 1. 打開統計視窗，並清空圖表區顯示讀取中
-            openModal('stats-modal');
+            // 更新畫面上顯示的年月
+            const year = targetDate.getFullYear();
+            const month = targetDate.getMonth() + 1; // JavaScript 月份是 0-11，所以要 +1
+            monthLabel.innerText = `${year} 年 ${month} 月`;
+
+            // 如果看的是未來，就把「下個月」按鈕藏起來或變淡
+            const now = new Date();
+            if (year === now.getFullYear() && month === now.getMonth() + 1) {
+                nextBtn.style.opacity = '0.2'; nextBtn.style.pointerEvents = 'none';
+            } else {
+                nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto';
+            }
+
             chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">能量讀取中...</div>';
             totalCountEl.innerText = '0';
-            
-            // 2. 如果沒有登入，直接跳錯誤 (理論上按鈕不會出現)
-            if (!pb || !pb.authStore.isValid) return;
 
             try {
+                // 🕒 計算該月的第一天和最後一天 (格式轉換為 ISO 字串供 PocketBase 查詢)
+                // 本月第一天：例如 2026-03-01 00:00:00.000Z
+                const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString().replace('T', ' ');
+                // 下個月的第一天：用來當作本月的結束界線
+                const endDate = new Date(Date.UTC(year, month, 1)).toISOString().replace('T', ' ');
 
-                // 3. 🚀 穩定作法：抓出該使用者的所有紀錄，讓前端來分組計算
+                // 🚀 加入時間過濾器：created >= 月初 且 created < 下個月初
                 const records = await pb.collection('practice_logs').getFullList({
-                    filter: `user = "${pb.authStore.model.id}"`,
-                    requestKey: null // 防止請求被意外取消
+                    filter: `user = "${pb.authStore.model.id}" && created >= "${startDate}" && created < "${endDate}"`,
+                    requestKey: null 
                 });
                 
-                // 如果沒有紀錄
                 if (records.length === 0) {
-                    chartContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; background: rgba(0,0,0,0.01); border-radius: 12px; margin-top: 20px;">目前還沒有完成過任何練習卡片喔。<br>去首頁點幾張卡片，補充一點能量吧！</div>';
+                    chartContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; background: rgba(0,0,0,0.01); border-radius: 12px; margin-top: 20px;">${month} 月份還沒有練習紀錄喔。<br>每一次的開始都不嫌晚！</div>`;
                     return;
                 }
 
-                // 手動進行分組統計 (計算每張卡片的次數)
+                // 統計分組 (跟之前一樣)
                 const statsMap = {};
                 records.forEach(record => {
                     const title = record.cardTitle || '未知練習';
                     statsMap[title] = (statsMap[title] || 0) + 1;
                 });
 
-                // 把統計結果轉換成陣列，並由大到小排序
                 const rawStats = Object.keys(statsMap).map(title => ({
-                    cardTitle: title,
-                    count: statsMap[title]
+                    cardTitle: title, count: statsMap[title]
                 })).sort((a, b) => b.count - a.count);
 
-                // 計算總次數與最大次數 (用來畫長條圖的 100% 比例)
                 const totalCount = records.length;
-                const maxCount = rawStats[0].count; // 排序後的第一個就是最大值
+                const maxCount = rawStats[0].count;
 
-                // 4. 動態生成純 CSS 長條圖 (Bar Chart)
+                // 畫出圖表
                 let chartHTML = '';
                 rawStats.forEach(stat => {
-                    const title = stat.cardTitle || '未知練習';
-                    const count = stat.count;
-                    const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0; // 計算長條長度百分比
-                    
+                    const percentage = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
                     chartHTML += `
                         <div style="margin-bottom: 18px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">${title}</div>
-                                <div style="font-size: 0.9rem; font-weight: bold; color: var(--onene-purple);">${count} 次</div>
+                                <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">${stat.cardTitle}</div>
+                                <div style="font-size: 0.9rem; font-weight: bold; color: var(--onene-purple);">${stat.count} 次</div>
                             </div>
                             <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.04); border-radius: 5px; overflow: hidden;">
                                 <div style="height: 100%; width: 0; background: var(--onene-purple); border-radius: 5px; transition: width 0.6s ease-out;" class="stats-bar" data-width="${percentage}%"></div>
@@ -1006,21 +1023,41 @@ function initAuth() {
                     `;
                 });
                 
-                // 5. 將生成的圖表放入 Modal
                 totalCountEl.innerText = totalCount;
                 chartContainer.innerHTML = chartHTML;
 
-                // 6. 觸發 CSS 動態效果 (讓長條圖滑出來)
                 setTimeout(() => {
-                    document.querySelectorAll('.stats-bar').forEach(bar => {
-                        bar.style.width = bar.dataset.width;
-                    });
+                    document.querySelectorAll('.stats-bar').forEach(bar => { bar.style.width = bar.dataset.width; });
                 }, 100);
 
             } catch (err) {
                 console.error("無法讀取統計資料", err);
                 chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--onene-red);">目前無法連線到資料庫，請檢查網路設定。</div>';
             }
+        }
+
+        // 綁定「打開視窗」按鈕
+        viewStatsBtn.addEventListener('click', () => {
+            if (!pb || !pb.authStore.isValid) return;
+            openModal('stats-modal');
+            currentReportDate = new Date(); // 每次打開都預設看「這個月」
+            loadMonthlyStats(currentReportDate);
+        });
+
+        // 綁定「上個月」按鈕
+        document.getElementById('stats-prev-month').addEventListener('click', () => {
+            currentReportDate.setMonth(currentReportDate.getMonth() - 1);
+            loadMonthlyStats(currentReportDate);
+        });
+
+        // 綁定「下個月」按鈕
+        document.getElementById('stats-next-month').addEventListener('click', () => {
+            const now = new Date();
+            // 防止看到未來的月份
+            if (currentReportDate.getFullYear() === now.getFullYear() && currentReportDate.getMonth() === now.getMonth()) return;
+            
+            currentReportDate.setMonth(currentReportDate.getMonth() + 1);
+            loadMonthlyStats(currentReportDate);
         });
     }
 
