@@ -349,6 +349,7 @@
                 <button id="google-login-btn" style="background: #fff; color: #444; border: 1px solid #ddd; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 16px; height: 16px;">
                     Google
+                <button id="view-stats-btn" style="display: none; background: var(--onene-purple); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;">📊 我的練習統計</button>
                 </button>
             </div>
         </div>
@@ -625,7 +626,23 @@ class Star {
 }
 function initCanvas() { const parent = canvas.parentElement; const r = parent.getBoundingClientRect(); canvas.width = r.width; canvas.height = r.height; }
 function animateStars() { ctx.clearRect(0, 0, canvas.width, canvas.height); stars.forEach(s => { s.update(canvas.width, canvas.height, stars); s.draw(ctx); }); requestAnimationFrame(animateStars); }
-function triggerStarReward() { addStar(true); }
+// 🌟 升級版：給星星的同時，紀錄完成了哪張卡片
+async function triggerStarReward(cardId = 'unknown', cardTitle = '未命名練習') { 
+    addStar(true); 
+
+    // 如果使用者有登入，就把這筆紀錄寫進 PocketBase 的 practice_logs 資料表
+    if (typeof pb !== 'undefined' && pb.authStore.isValid) {
+        try {
+            await pb.collection('practice_logs').create({
+                user: pb.authStore.model.id,
+                cardId: cardId,
+                cardTitle: cardTitle
+            });
+        } catch (e) { 
+            console.log("練習紀錄同步失敗", e); 
+        }
+    }
+}
 function checkDailyDecay() {
     const today = new Date().toLocaleDateString(); const lastDate = localStorage.getItem('oneneLastDate'); let savedCount = parseInt(localStorage.getItem('oneneStarCount') || '0');
     if (lastDate && lastDate !== today && savedCount > 0) { savedCount = Math.floor(savedCount * 0.7); localStorage.setItem('oneneStarCount', savedCount); }
@@ -880,6 +897,63 @@ function initAuth() {
     const googleLoginBtn = document.getElementById('google-login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const userStatus = document.getElementById('user-status');
+    
+// 在 initAuth 裡抓取這顆按鈕
+    const viewStatsBtn = document.getElementById('view-stats-btn');
+
+    // ... (尋找 checkLoginStatus 函數) ...
+    function checkLoginStatus() {
+        if (pb.authStore.isValid) {
+            // ... (原本登入成功顯示的東西) ...
+            if(viewStatsBtn) viewStatsBtn.style.display = 'block'; // 登入後顯示統計按鈕
+        } else {
+            // ... (原本登出顯示的東西) ...
+            if(viewStatsBtn) viewStatsBtn.style.display = 'none'; // 未登入隱藏
+        }
+    }
+
+    // 🌟 點擊按鈕，去後端抓資料並統計
+    if (viewStatsBtn) {
+        viewStatsBtn.addEventListener('click', async () => {
+            const originalText = viewStatsBtn.innerText;
+            viewStatsBtn.innerText = '讀取中...';
+            
+            try {
+                // 1. 去 practice_logs 抓出這個登入者「所有的」紀錄
+                const records = await pb.collection('practice_logs').getFullList({
+                    filter: `user = "${pb.authStore.model.id}"`,
+                    sort: '-created' // 新的排前面
+                });
+                
+                // 2. 開始計算每張卡片出現了幾次
+                const statsMap = {};
+                records.forEach(record => {
+                    const title = record.cardTitle || '未知練習';
+                    statsMap[title] = (statsMap[title] || 0) + 1;
+                });
+                
+                // 3. 把計算結果組裝成文字
+                let resultMessage = '【您的正念練習統計】\n\n';
+                if (records.length === 0) {
+                    resultMessage += '目前還沒有練習紀錄喔，去點幾張卡片體驗看看吧！';
+                } else {
+                    resultMessage += `總共完成：${records.length} 次\n---\n`;
+                    for (const [title, count] of Object.entries(statsMap)) {
+                        resultMessage += `🔸 ${title}： ${count} 次\n`;
+                    }
+                }
+                
+                // 4. 跳出視窗顯示結果 (這裡先用簡單的 alert，之後你可以把它做成漂亮的 Modal)
+                alert(resultMessage);
+                
+            } catch (err) {
+                console.error("無法讀取統計資料", err);
+                alert("目前無法讀取資料，請確認網路或資料庫設定。");
+            } finally {
+                viewStatsBtn.innerText = originalText;
+            }
+        });
+    }
 
     // 從雲端下載資料並套用的函數
     function syncDataFromDB() {

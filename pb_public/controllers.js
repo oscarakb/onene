@@ -106,7 +106,7 @@ class OrbController extends BaseCardController {
         this.chargeTimer = setTimeout(tick, 150);
     }
     endCharge() { if (this.chargeTimer) { clearTimeout(this.chargeTimer); this.chargeTimer = null; } const hint = this.el.querySelector('.orb-hint'); if (hint && this.charge < 100) { hint.innerText = "長按上方能量球充能"; } }
-    showComplete() { this.destroy(); this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><span class="material-symbols-rounded icon-xl">check_circle</span><div class="text-xl mt-15">充能完畢</div><p class="text-sm opacity-80 mt-10">帶著這份動力出發吧！</p></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(); }
+    showComplete() { this.destroy(); this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><span class="material-symbols-rounded icon-xl">check_circle</span><div class="text-xl mt-15">充能完畢</div><p class="text-sm opacity-80 mt-10">帶著這份動力出發吧！</p></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(this.data.id, this.data.title); }
     playTone(freq, dur, vol) {} 
 }
 
@@ -123,7 +123,7 @@ class MindCleanController extends BaseCardController {
         this.el.innerHTML = this.getSharedUI() + stepHTML + `<div data-action="close-card" class="action-close">✕ 結束練習</div>`; 
         this.syncHeight();
     }
-    finish() { this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><span class="material-symbols-rounded icon-xl">check_circle</span><div class="text-xl mt-15">清理完成</div><p class="text-sm opacity-80 mt-10">帶著輕盈的頻率，好好休息吧。</p></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(); }
+    finish() { this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><span class="material-symbols-rounded icon-xl">check_circle</span><div class="text-xl mt-15">清理完成</div><p class="text-sm opacity-80 mt-10">帶著輕盈的頻率，好好休息吧。</p></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(this.data.id, this.data.title); }
 }
 
 class AnswerBookController extends BaseCardController {
@@ -131,7 +131,7 @@ class AnswerBookController extends BaseCardController {
     handleAction(action, target) { super.handleAction(action, target); if (action === 'reveal-answer-ritual') { this.showRitual(); } if (action === 'restart-answer') { this.renderPrompt(); } }
     renderPrompt() { this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-lg tracking-wide mb-10">默念問題 3 次</div><div data-action="reveal-answer-ritual" class="cursor-pointer"><span class="material-symbols-rounded icon-xxl pointer-none">menu_book</span><div class="text-xs opacity-80 pointer-none mt-10">點擊書本獲得答案</div></div></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); }
     showRitual() { this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-lg tracking-wider opacity-90 font-normal">翻閱命運中...</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>`; this.syncHeight(); setTimeout(() => this.reveal(), 1800); }
-    reveal() { const answer = ANSWERS_LIBRARY[Math.floor(Math.random() * ANSWERS_LIBRARY.length)]; this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-sm opacity-70 tracking-wide mb-5">解答</div><div class="text-xl mb-25 line-height-lg">「 ${answer} 」</div><div data-action="restart-answer" class="btn-outline">↻ 再算一次</div></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(); }
+    reveal() { const answer = ANSWERS_LIBRARY[Math.floor(Math.random() * ANSWERS_LIBRARY.length)]; this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-sm opacity-70 tracking-wide mb-5">解答</div><div class="text-xl mb-25 line-height-lg">「 ${answer} 」</div><div data-action="restart-answer" class="btn-outline">↻ 再算一次</div></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(this.data.id, this.data.title); }
 }
 
 class MoodController extends BaseCardController {
@@ -142,7 +142,7 @@ class MoodController extends BaseCardController {
     toggleCheck(itemEl) {
         const cb = itemEl.querySelector('input'); cb.checked = !cb.checked; cb.checked ? itemEl.classList.add('checked') : itemEl.classList.remove('checked');
         if(Array.from(this.el.querySelectorAll('input')).every(c => c.checked)) {
-            setTimeout(() => { this.el.classList.remove('pop-active'); this.el.classList.add('balanced-state'); this.el.innerHTML = `<div class="card-body-result"><div style="animation: fadeIn 0.8s ease;" class="text-xl tracking-wider text-white">我值得變得更好</div></div><div class="action-close" data-action="close-card">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(); }, 300);
+            setTimeout(() => { this.el.classList.remove('pop-active'); this.el.classList.add('balanced-state'); this.el.innerHTML = `<div class="card-body-result"><div style="animation: fadeIn 0.8s ease;" class="text-xl tracking-wider text-white">我值得變得更好</div></div><div class="action-close" data-action="close-card">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(this.data.id, this.data.title); }, 300);
         }
     }
 }
@@ -188,7 +188,7 @@ class BreathController extends BaseCardController {
     }
     updateGuide() {
         if (!this.guideEl) return;
-        if (this.totalRounds >= 12) { this.guideEl.innerText = "能量已充盈，請持續感受這份平靜"; this.guideEl.style.color = "rgba(255,255,255,1)"; this.guideEl.style.fontWeight = "700"; if (!this.rewardGiven) { triggerStarReward(); this.rewardGiven = true; } } 
+        if (this.totalRounds >= 12) { this.guideEl.innerText = "能量已充盈，請持續感受這份平靜"; this.guideEl.style.color = "rgba(255,255,255,1)"; this.guideEl.style.fontWeight = "700"; if (!this.rewardGiven) { triggerStarReward(this.data.id, this.data.title); this.rewardGiven = true; } } 
         else { const guideText = MEDITATION_GUIDES[this.totalRounds % MEDITATION_GUIDES.length]; this.guideEl.style.opacity = '0'; setTimeout(() => { this.guideEl.innerText = guideText; this.guideEl.style.opacity = '0.8'; }, 300); }
     }
 }
@@ -364,7 +364,7 @@ class EyeTrackerController extends BaseCardController {
             </div>
             <div data-action="close-card" class="action-close">✕ 結束練習</div>
         `;
-        this.syncHeight(); triggerStarReward();
+        this.syncHeight(); triggerStarReward(this.data.id, this.data.title);
     }
     
     destroy() { this.stopAnimation(); this.el.style.background = ''; }
@@ -407,7 +407,7 @@ BubbleController.prototype.pop = function(bubbleEl) {
     }
     if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && "vibrate" in navigator) { navigator.vibrate(15); }
     bubbleEl.classList.add('is-popped'); this.poppedCount++; 
-    if (this.poppedCount === 25) { triggerStarReward(); }
+    if (this.poppedCount === 25) { triggerStarReward(this.data.id, this.data.title); }
 };
 
 MindCleanController.prototype.triggerRitual = function(btnEl, callback) {
