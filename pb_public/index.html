@@ -776,6 +776,43 @@ let SITE_DATA = {
 };
 let audioCtx = null;
 function getAudioCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
+<div id="stats-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closeModal('stats-modal')">
+            <span class="material-symbols-rounded">close</span>
+        </div>
+        <div class="text-xl font-bold mt-10" style="display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-rounded" style="color: var(--onene-purple); font-size: 28px;">analytics</span>
+            <span>個人成就報告</span>
+        </div>
+    </div>
+    <div class="modal-body" style="background: var(--bg-light);">
+        <div class="settings-list" style="padding: 24px; background: var(--card-bg);">
+            
+            <div id="stats-overview" style="display: flex; gap: 15px; margin-bottom: 25px;">
+                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">總練習次數</div>
+                    <div id="stats-total-count" style="font-size: 2rem; font-weight: bold; color: var(--text-main); margin-top: 5px;">0</div>
+                </div>
+                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">本週累計</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--onene-yellow); margin-top: 5px;">–</div>
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 10px;">
+                <div style="font-size: 0.95rem; font-weight: bold; color: var(--text-main); margin-bottom: 15px;">練習卡片分布</div>
+                <div id="stats-chart-container" class="space-y-4">
+                    <div style="text-align: center; padding: 20px; color: var(--text-muted);">資料讀取中...</div>
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                每一次練習，都是更靠近平靜的一步。
+            </div>
+        </div>
+    </div>
+</div>
 
 // ==========================================
 // 4. Core App Logic
@@ -902,49 +939,87 @@ function initAuth() {
 // 在 initAuth 裡抓取這顆按鈕
     const viewStatsBtn = document.getElementById('view-stats-btn');
 
-    // 🌟 點擊按鈕，去後端抓資料並統計
+// ==========================================
+    // 🌟 全新：升級版專屬圖表統計 Modal 邏輯
+    // ==========================================
     if (viewStatsBtn) {
         viewStatsBtn.addEventListener('click', async () => {
-            const originalText = viewStatsBtn.innerText;
-            viewStatsBtn.innerText = '讀取中...';
+            const chartContainer = document.getElementById('stats-chart-container');
+            const totalCountEl = document.getElementById('stats-total-count');
             
+            // 1. 打開統計視窗，並清空圖表區顯示讀取中
+            openModal('stats-modal');
+            chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">能量讀取中...</div>';
+            totalCountEl.innerText = '0';
+            
+            // 2. 如果沒有登入，直接跳錯誤 (理論上按鈕不會出現)
+            if (!pb || !pb.authStore.isValid) return;
+
             try {
-                // 1. 去 practice_logs 抓出這個登入者「所有的」紀錄
-                const records = await pb.collection('practice_logs').getFullList({
-                    filter: `user = "${pb.authStore.model.id}"`,
-                    sort: '-created' // 新的排前面
-                });
-                
-                // 2. 開始計算每張卡片出現了幾次
-                const statsMap = {};
-                records.forEach(record => {
-                    const title = record.cardTitle || '未知練習';
-                    statsMap[title] = (statsMap[title] || 0) + 1;
-                });
-                
-                // 3. 把計算結果組裝成文字
-                let resultMessage = '【您的正念練習統計】\n\n';
-                if (records.length === 0) {
-                    resultMessage += '目前還沒有練習紀錄喔，去點幾張卡片體驗看看吧！';
-                } else {
-                    resultMessage += `總共完成：${records.length} 次\n---\n`;
-                    for (const [title, count] of Object.entries(statsMap)) {
-                        resultMessage += `🔸 ${title}： ${count} 次\n`;
+                // 3. 🚀 核心升級：直接向 PocketBase API 發送分組統計請求 (高效能做法)
+                // 我們只撈當前使用者的紀錄，按 cardId 分組，算出 count
+                const result = await pb.send('/api/collections/practice_logs/records', {
+                    method: 'GET',
+                    query: {
+                        filter: `user = "${pb.authStore.model.id}"`,
+                        fields: 'cardTitle,count', // 只抓標題和次數
+                        group: 'cardId', // 按卡片ID分組
+                        sort: '-count' // 最常玩的排前面
                     }
+                });
+                
+                // PocketBase 回傳的是 [{cardTitle: '球', count: 10}, ...]
+                const rawStats = result.items || [];
+                let totalCount = 0;
+                
+                // 如果沒有紀錄
+                if (rawStats.length === 0) {
+                    chartContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; background: rgba(0,0,0,0.01); border-radius: 12px; margin-top: 20px;">目前還沒有完成過任何練習卡片喔。<br>去首頁點幾張卡片，補充一點能量吧！</div>';
+                    return;
                 }
+
+                // 找出最大的次數，用來當圖表 100% 的基準
+                const maxCount = Math.max(...rawStats.map(s => s.count));
+                totalCount = rawStats.reduce((sum, s) => sum + s.count, 0);
+
+                // 4. 動態生成純 CSS 長條圖 (Bar Chart)
+                let chartHTML = '';
+                rawStats.forEach(stat => {
+                    const title = stat.cardTitle || '未知練習';
+                    const count = stat.count;
+                    const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0; // 計算長條長度百分比
+                    
+                    chartHTML += `
+                        <div style="margin-bottom: 18px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">${title}</div>
+                                <div style="font-size: 0.9rem; font-weight: bold; color: var(--onene-purple);">${count} 次</div>
+                            </div>
+                            <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.04); border-radius: 5px; overflow: hidden;">
+                                <div style="height: 100%; width: 0; background: var(--onene-purple); border-radius: 5px; transition: width 0.6s ease-out;" class="stats-bar" data-width="${percentage}%"></div>
+                            </div>
+                        </div>
+                    `;
+                });
                 
-                // 4. 跳出視窗顯示結果 (這裡先用簡單的 alert，之後你可以把它做成漂亮的 Modal)
-                alert(resultMessage);
-                
+                // 5. 將生成的圖表放入 Modal
+                totalCountEl.innerText = totalCount;
+                chartContainer.innerHTML = chartHTML;
+
+                // 6. 觸發 CSS 動態效果 (讓長條圖滑出來)
+                setTimeout(() => {
+                    document.querySelectorAll('.stats-bar').forEach(bar => {
+                        bar.style.width = bar.dataset.width;
+                    });
+                }, 100);
+
             } catch (err) {
                 console.error("無法讀取統計資料", err);
-                alert("目前無法讀取資料，請確認網路或資料庫設定。");
-            } finally {
-                viewStatsBtn.innerText = originalText;
+                chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--onene-red);">目前無法連線到資料庫，請檢查網路設定。</div>';
             }
         });
     }
-
+    
     // 從雲端下載資料並套用的函數
     function syncDataFromDB() {
         const user = pb.authStore.model;
