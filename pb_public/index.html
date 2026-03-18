@@ -662,7 +662,7 @@ async function fetchDynamicContent() {
         }
     } catch (e) { console.log("答案之書載入失敗，使用預設值"); }
 
-    // 🚀 3. 抓取首頁的模組卡片
+// 🚀 3. 抓取首頁的模組卡片
     try {
         const cardsData = await pb.collection('cards').getFullList({ 
             filter: 'isActive = true',
@@ -684,17 +684,20 @@ async function fetchDynamicContent() {
             
             SITE_DATA.sections[0].cards = dynamicCards;
             
-    // 👇 新增這層判斷：如果目前「沒有」打開的卡片，才重新渲染畫面
+            // 👇 剛剛這裡不小心漏掉了下面這兩行，把它們補回來！
+            if (window.appInstance) {
+                window.appInstance.data = SITE_DATA; // 將新資料塞給 App
+                
+                // 新增這層判斷：如果目前「沒有」打開的卡片，才重新渲染畫面
                 if (!window.appInstance.activeCardId) {
                     window.appInstance.renderSections(); 
                     window.appInstance.updateQuote(); // 把小語補回去
                 }
-            }
-        }
+            } // 結束 if (window.appInstance)
+        } // 結束 if (cardsData.length > 0)
     } catch (e) { 
         console.error("卡片載入失敗，請檢查 PocketBase 設定", e); 
     }
-}
 
 const MEDITATION_GUIDES = [ "感受氣流緩緩進入鼻腔，帶走焦慮", "想像全身肌肉像冰淇淋一樣慢慢融化", "將意念放在心輪，感受溫暖的光芒", "釋放肩頸的緊繃，回歸內在的中心", "每一次吐氣，都在排空不屬於你的負擔", "現在的你，擁有最強大的平靜能量" ];
 const MOOD_CONFIG = {
