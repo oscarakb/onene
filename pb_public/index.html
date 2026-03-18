@@ -360,6 +360,43 @@
 </div>
 
 <footer>© 2026 昂昂向上 Inno-Research</footer>
+<div id="stats-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closeModal('stats-modal')">
+            <span class="material-symbols-rounded">close</span>
+        </div>
+        <div class="text-xl font-bold mt-10" style="display: flex; align-items: center; gap: 8px;">
+            <span class="material-symbols-rounded" style="color: var(--onene-purple); font-size: 28px;">analytics</span>
+            <span>個人成就報告</span>
+        </div>
+    </div>
+    <div class="modal-body" style="background: var(--bg-light);">
+        <div class="settings-list" style="padding: 24px; background: var(--card-bg);">
+            
+            <div id="stats-overview" style="display: flex; gap: 15px; margin-bottom: 25px;">
+                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">總練習次數</div>
+                    <div id="stats-total-count" style="font-size: 2rem; font-weight: bold; color: var(--text-main); margin-top: 5px;">0</div>
+                </div>
+                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">本週累計</div>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--onene-yellow); margin-top: 5px;">–</div>
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-bottom: 10px;">
+                <div style="font-size: 0.95rem; font-weight: bold; color: var(--text-main); margin-bottom: 15px;">練習卡片分布</div>
+                <div id="stats-chart-container" class="space-y-4">
+                    <div style="text-align: center; padding: 20px; color: var(--text-muted);">資料讀取中...</div>
+                </div>
+            </div>
+
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                每一次練習，都是更靠近平靜的一步。
+            </div>
+        </div>
+    </div>
+</div>
 
 <div id="auth-modal" class="app-modal">
     <div class="modal-header">
@@ -776,43 +813,6 @@ let SITE_DATA = {
 };
 let audioCtx = null;
 function getAudioCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); return audioCtx; }
-<div id="stats-modal" class="app-modal">
-    <div class="modal-header">
-        <div class="modal-close-btn" onclick="closeModal('stats-modal')">
-            <span class="material-symbols-rounded">close</span>
-        </div>
-        <div class="text-xl font-bold mt-10" style="display: flex; align-items: center; gap: 8px;">
-            <span class="material-symbols-rounded" style="color: var(--onene-purple); font-size: 28px;">analytics</span>
-            <span>個人成就報告</span>
-        </div>
-    </div>
-    <div class="modal-body" style="background: var(--bg-light);">
-        <div class="settings-list" style="padding: 24px; background: var(--card-bg);">
-            
-            <div id="stats-overview" style="display: flex; gap: 15px; margin-bottom: 25px;">
-                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">總練習次數</div>
-                    <div id="stats-total-count" style="font-size: 2rem; font-weight: bold; color: var(--text-main); margin-top: 5px;">0</div>
-                </div>
-                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">本週累計</div>
-                    <div style="font-size: 2rem; font-weight: bold; color: var(--onene-yellow); margin-top: 5px;">–</div>
-                </div>
-            </div>
-
-            <div style="text-align: left; margin-bottom: 10px;">
-                <div style="font-size: 0.95rem; font-weight: bold; color: var(--text-main); margin-bottom: 15px;">練習卡片分布</div>
-                <div id="stats-chart-container" class="space-y-4">
-                    <div style="text-align: center; padding: 20px; color: var(--text-muted);">資料讀取中...</div>
-                </div>
-            </div>
-
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 15px;">
-                每一次練習，都是更靠近平靜的一步。
-            </div>
-        </div>
-    </div>
-</div>
 
 // ==========================================
 // 4. Core App Logic
@@ -1019,7 +1019,7 @@ function initAuth() {
             }
         });
     }
-    
+
     // 從雲端下載資料並套用的函數
     function syncDataFromDB() {
         const user = pb.authStore.model;
