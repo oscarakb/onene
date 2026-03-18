@@ -684,9 +684,11 @@ async function fetchDynamicContent() {
             
             SITE_DATA.sections[0].cards = dynamicCards;
             
-            if (window.appInstance) {
-                window.appInstance.data = SITE_DATA; 
-                window.appInstance.renderSections(); 
+    // 👇 新增這層判斷：如果目前「沒有」打開的卡片，才重新渲染畫面
+                if (!window.appInstance.activeCardId) {
+                    window.appInstance.renderSections(); 
+                    window.appInstance.updateQuote(); // 把小語補回去
+                }
             }
         }
     } catch (e) { 

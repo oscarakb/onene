@@ -83,6 +83,7 @@ class OrbController extends BaseCardController {
     destroy() { this.endCharge(); const orb = this.el.querySelector(`#target-orb-${this.data.id}`); if (orb) { orb.removeEventListener('mousedown', this.startHandler); orb.removeEventListener('touchstart', this.startHandler); } window.removeEventListener('mouseup', this.endHandler); window.removeEventListener('touchend', this.endHandler); }
     startCharge(e) {
         e.preventDefault(); e.stopPropagation(); if(this.charge >= 100) return;
+        const ctx = getAudioCtx();
         const title = this.el.querySelector('.orb-title'); const orb = this.el.querySelector(`#target-orb-${this.data.id}`); const hint = this.el.querySelector('.orb-hint'); 
         if (this.chargeTimer) clearTimeout(this.chargeTimer);
         const tick = () => {
