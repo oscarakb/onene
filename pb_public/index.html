@@ -956,7 +956,7 @@ function initAuth() {
             if (!pb || !pb.authStore.isValid) return;
 
             try {
-try {
+
                 // 3. 🚀 穩定作法：抓出該使用者的所有紀錄，讓前端來分組計算
                 const records = await pb.collection('practice_logs').getFullList({
                     filter: `user = "${pb.authStore.model.id}"`,
