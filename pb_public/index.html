@@ -738,65 +738,43 @@ window.addEventListener('resize', initCanvas);
 // 1. Data & Library
 // ==========================================
 // 1. 將常數 (const) 改為變數 (let)，並保留幾個預設值（以防網路連線太慢時畫面空白）
-let QUOTES_LIBRARY = ["能量讀取中...", "請保持平靜..."];
+let QUOTES_LIBRARY = ["能量讀取中...", "能量接收中..."];
 let ANSWERS_LIBRARY = ["翻閱命運中...", "請傾聽內心..."];
 
-// 2. 建立一個專門去後端「抓字」的非同步函數
-// 建立一個專門去後端「抓資料」的非同步函數
-// 建立一個專門去後端「抓資料」的非同步函數 (獨立防呆版)
+// ==========================================
+// 建立一個專門去後端「抓資料」的非同步函數 (並發加速防閃爍版)
+// ==========================================
 async function fetchDynamicContent() {
-    // 1. 抓取能量小語 (失敗不影響其他)
     try {
-        const quotesData = await pb.collection('quotes').getFullList({ requestKey: null });
-        if (quotesData.length > 0) {
-            QUOTES_LIBRARY = quotesData.map(record => record.text);
-            if (window.appInstance) window.appInstance.updateQuote();
-        }
-    } catch (e) { console.log("小語載入失敗，使用預設值"); }
+        // 🚀 1. 讓三個請求「同時」出發，不要互相等，速度最快！
+        // 加上 .catch(() => []) 確保就算某個資料表沒東西，也不會讓整個網頁當掉
+        const quotesPromise = pb.collection('quotes').getFullList({ requestKey: null }).catch(() => []);
+        const answersPromise = pb.collection('answers').getFullList({ requestKey: null }).catch(() => []);
+        const cardsPromise = pb.collection('cards').getFullList({ filter: 'isActive = true', sort: 'sortOrder', requestKey: null }).catch(() => []);
 
-    // 2. 抓取答案之書
-    try {
-        const answersData = await pb.collection('answers').getFullList({ requestKey: null });
-        if (answersData.length > 0) {
-            ANSWERS_LIBRARY = answersData.map(record => record.text);
-        }
-    } catch (e) { console.log("答案之書載入失敗，使用預設值"); }
+        // ⏳ 2. 等待這三個資料都抓回來
+        const [quotesData, answersData, cardsData] = await Promise.all([quotesPromise, answersPromise, cardsPromise]);
 
-// 🚀 3. 抓取首頁的模組卡片
-    try {
-        const cardsData = await pb.collection('cards').getFullList({ 
-            filter: 'isActive = true',
-            sort: 'sortOrder',
-            requestKey: null 
-        });
+        // 3. 開始把資料塞進變數裡
+        if (quotesData.length > 0) QUOTES_LIBRARY = quotesData.map(record => record.text);
+        if (answersData.length > 0) ANSWERS_LIBRARY = answersData.map(record => record.text);
         
         if (cardsData.length > 0) {
-            const dynamicCards = cardsData.map(record => ({
-                id: record.cardId,
-                type: record.type,
-                color: record.color,
-                variant: record.variant,
-                icon: record.icon,
-                title: record.title,
-                subtitle: record.subtitle,
-                action: record.action
+            SITE_DATA.sections[0].cards = cardsData.map(record => ({
+                id: record.cardId, type: record.type, color: record.color, variant: record.variant,
+                icon: record.icon, title: record.title, subtitle: record.subtitle, action: record.action
             }));
-            
-            SITE_DATA.sections[0].cards = dynamicCards;
-            
-            // 👇 剛剛這裡不小心漏掉了下面這兩行，把它們補回來！
-            if (window.appInstance) {
-                window.appInstance.data = SITE_DATA; // 將新資料塞給 App
-                
-                // 新增這層判斷：如果目前「沒有」打開的卡片，才重新渲染畫面
-                if (!window.appInstance.activeCardId) {
-                    window.appInstance.renderSections(); 
-                    window.appInstance.updateQuote(); // 把小語補回去
-                }
-            } // 結束 if (window.appInstance)
-        } // 結束 if (cardsData.length > 0)
-    } catch (e) { 
-        console.error("卡片載入失敗，請檢查 PocketBase 設定", e); 
+        }
+
+        // 🌟 4. 最關鍵的一步：等「所有資料都就位」後，再一次性重新畫出畫面！
+        // 這樣就不會發生「先換字、又重畫、再換字」的閃爍現象了。
+        if (window.appInstance && !window.appInstance.activeCardId) {
+            window.appInstance.data = SITE_DATA;
+            window.appInstance.renderSections(); 
+            window.appInstance.updateQuote(); 
+        }
+    } catch (err) {
+        console.error("讀取動態資料發生嚴重錯誤", err);
     }
 }
 
@@ -837,8 +815,21 @@ class App {
     constructor(data) { this.data = data; this.container = document.getElementById('main-content-list'); this.controllers = new Map(); this.activeCardId = null; }
     init() { this.loadSavedThemeIcon(); this.renderSections(); this.updateQuote(); this.bindGlobalEvents(); }
     loadSavedThemeIcon() { const savedTheme = localStorage.getItem('oneneSavedTheme'); const savedIcon = localStorage.getItem('oneneSavedThemeIcon'); if (savedTheme && savedIcon) { document.getElementById('current-theme-icon').innerText = savedIcon; } }
-    updateQuote() { const text = QUOTES_LIBRARY[Math.floor(Math.random() * QUOTES_LIBRARY.length)]; document.getElementById('quote-text-content').innerText = `# ${text} #`; }
-    renderSections() {
+    updateQuote() { 
+        if (QUOTES_LIBRARY.length === 0) return;
+        
+        // 1. 取得現在的時間戳記，並加上 8 小時 (轉換成台灣時區 UTC+8)
+        // 這樣可以確保在台灣時間的半夜 12 點準時換句話
+        const todayDays = Math.floor((Date.now() + 8 * 60 * 60 * 1000) / 86400000);
+        
+        // 2. 用總天數去除以小語的總數量，得到的「餘數」就是今天的索引值
+        const dailyIndex = todayDays % QUOTES_LIBRARY.length;
+        
+        // 3. 抓出今天的專屬小語並顯示
+        const text = QUOTES_LIBRARY[dailyIndex]; 
+        document.getElementById('quote-text-content').innerText = `# ${text} #`; 
+    }
+        renderSections() {
         this.container.innerHTML = this.data.sections.map(sec => `
             <section class="section-group">
                 <div id="quote-text-content" class="quote-header"># 讀取能量中 #</div>
@@ -934,7 +925,7 @@ async function saveSettings() {
 // ==========================================
 // 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
 // 讓系統自動偵測目前的網址，永遠不會連錯！
-    const pb = new PocketBase(window.location.origin);
+    const pb = new PocketBase('https://onene.up.railway.app');
 
 function initAuth() {
     const loginBtn = document.getElementById('login-btn');
