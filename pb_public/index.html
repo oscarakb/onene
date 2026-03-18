@@ -383,7 +383,8 @@
                     <div id="label-total-count" style="font-size: 0.8rem; color: var(--text-muted);">該月總計</div>
                     <div id="stats-total-count" style="font-size: 2rem; font-weight: bold; color: var(--text-main); margin-top: 5px;">0</div>
                 </div>
-                <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
+                
+                <div id="weekly-stats-block" style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px; text-align: center;">
                     <div style="font-size: 0.8rem; color: var(--text-muted);">本週累計</div>
                     <div id="stats-weekly-count" style="font-size: 2rem; font-weight: bold; color: var(--onene-yellow); margin-top: 5px;">–</div>
                 </div>
@@ -1010,23 +1011,27 @@ function initAuth() {
                 document.getElementById('label-total-count').innerText = `${month} 月總計`;
                 totalCountEl.innerText = totalCount;
 
-                // 🚀 新增：計算右邊的「本週累計」
+                // 🚀 計算與顯示「本週累計」
+                const weeklyBlock = document.getElementById('weekly-stats-block');
                 const weeklyCountEl = document.getElementById('stats-weekly-count');
-                // 判斷：只有在觀看「真實的現在這個月」時，才計算本週次數
+                
+                // 判斷：只有在觀看「真實的現在這個月」時，才顯示區塊並計算
                 if (year === now.getFullYear() && month === now.getMonth() + 1) {
+                    weeklyBlock.style.display = 'block'; // 顯示本週區塊
+                    
                     // 找出這個禮拜一的日期
                     const today = new Date();
-                    const dayOfWeek = today.getDay() || 7; // 把週日(0)轉成7，讓一週從週一開始
+                    const dayOfWeek = today.getDay() || 7; 
                     today.setHours(0, 0, 0, 0);
                     const thisMonday = new Date(today);
                     thisMonday.setDate(today.getDate() - dayOfWeek + 1);
                     
-                    // 從這個月的紀錄裡，篩選出「時間大於等於本週一」的數量
+                    // 篩選出大於等於本週一的數量
                     const weeklyCount = records.filter(r => new Date(r.created.replace(' ', 'T')) >= thisMonday).length;
                     weeklyCountEl.innerText = weeklyCount;
                 } else {
-                    // 如果是在看過去的月份，本週累計就顯示橫線
-                    weeklyCountEl.innerText = '–'; 
+                    // 🌟 如果是在看過去的月份，直接把整個「本週累計」的方塊隱藏起來！
+                    weeklyBlock.style.display = 'none'; 
                 }
 
                 // 畫出圖表
