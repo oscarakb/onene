@@ -956,31 +956,35 @@ function initAuth() {
             if (!pb || !pb.authStore.isValid) return;
 
             try {
-                // 3. 🚀 核心升級：直接向 PocketBase API 發送分組統計請求 (高效能做法)
-                // 我們只撈當前使用者的紀錄，按 cardId 分組，算出 count
-                const result = await pb.send('/api/collections/practice_logs/records', {
-                    method: 'GET',
-                    query: {
-                        filter: `user = "${pb.authStore.model.id}"`,
-                        fields: 'cardTitle,count', // 只抓標題和次數
-                        group: 'cardId', // 按卡片ID分組
-                        sort: '-count' // 最常玩的排前面
-                    }
+try {
+                // 3. 🚀 穩定作法：抓出該使用者的所有紀錄，讓前端來分組計算
+                const records = await pb.collection('practice_logs').getFullList({
+                    filter: `user = "${pb.authStore.model.id}"`,
+                    requestKey: null // 防止請求被意外取消
                 });
                 
-                // PocketBase 回傳的是 [{cardTitle: '球', count: 10}, ...]
-                const rawStats = result.items || [];
-                let totalCount = 0;
-                
                 // 如果沒有紀錄
-                if (rawStats.length === 0) {
+                if (records.length === 0) {
                     chartContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; background: rgba(0,0,0,0.01); border-radius: 12px; margin-top: 20px;">目前還沒有完成過任何練習卡片喔。<br>去首頁點幾張卡片，補充一點能量吧！</div>';
                     return;
                 }
 
-                // 找出最大的次數，用來當圖表 100% 的基準
-                const maxCount = Math.max(...rawStats.map(s => s.count));
-                totalCount = rawStats.reduce((sum, s) => sum + s.count, 0);
+                // 手動進行分組統計 (計算每張卡片的次數)
+                const statsMap = {};
+                records.forEach(record => {
+                    const title = record.cardTitle || '未知練習';
+                    statsMap[title] = (statsMap[title] || 0) + 1;
+                });
+
+                // 把統計結果轉換成陣列，並由大到小排序
+                const rawStats = Object.keys(statsMap).map(title => ({
+                    cardTitle: title,
+                    count: statsMap[title]
+                })).sort((a, b) => b.count - a.count);
+
+                // 計算總次數與最大次數 (用來畫長條圖的 100% 比例)
+                const totalCount = records.length;
+                const maxCount = rawStats[0].count; // 排序後的第一個就是最大值
 
                 // 4. 動態生成純 CSS 長條圖 (Bar Chart)
                 let chartHTML = '';
