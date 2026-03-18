@@ -357,6 +357,38 @@
 
 <footer>© 2026 昂昂向上 Inno-Research</footer>
 
+<div id="auth-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closeModal('auth-modal')">
+            <span class="material-symbols-rounded">close</span>
+        </div>
+        <div class="text-xl font-bold mt-10" id="auth-modal-title">會員登入</div>
+    </div>
+    <div class="modal-body">
+        <div class="settings-list" style="padding: 24px; background: var(--card-bg);">
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+                <button id="tab-login" class="start-btn" style="flex: 1; padding: 10px; background: var(--onene-yellow); color: #fff; box-shadow: none;">登入</button>
+                <button id="tab-register" class="start-btn" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.05); color: var(--text-muted); box-shadow: none;">註冊</button>
+            </div>
+
+            <div style="margin-bottom: 15px; text-align: left;">
+                <label style="display: block; font-size: 0.85rem; margin-bottom: 8px; font-weight: 500; color: var(--text-main);">電子信箱</label>
+                <input type="email" id="auth-email" placeholder="your@email.com" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-light); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.3s;">
+            </div>
+
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="display: block; font-size: 0.85rem; margin-bottom: 8px; font-weight: 500; color: var(--text-main);">密碼 <span style="font-size: 0.75rem; opacity: 0.6;">(至少 8 碼)</span></label>
+                <input type="password" id="auth-password" placeholder="••••••••" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-light); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.3s;">
+            </div>
+
+            <button id="auth-submit-btn" style="width: 100%; background: var(--onene-yellow); color: #fff; border: none; padding: 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s;">確認登入</button>
+            
+            <div id="auth-error-msg" style="color: var(--onene-red); font-size: 0.85rem; margin-top: 15px; text-align: center; display: none; font-weight: 500;">錯誤訊息</div>
+        </div>
+    </div>
+</div>
+
 <div id="settings-modal" class="app-modal">
     <div class="modal-header">
         <div class="modal-close-btn" onclick="closeModal('settings-modal')">
@@ -896,19 +928,78 @@ function initAuth() {
         }
     }
 
-    // 信箱登入按鈕
-    loginBtn.addEventListener('click', async () => {
-        const email = prompt('請輸入信箱：');
-        if (!email) return;
-        const password = prompt('請輸入密碼 (至少需要 8 個字元)：');
-        if (!password) return;
+// ==========================================
+    // 全新：自訂登入 / 註冊表單邏輯
+    // ==========================================
+    let isLoginMode = true; // 預設為登入模式
+    const authModal = document.getElementById('auth-modal');
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const authTitle = document.getElementById('auth-modal-title');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const emailInput = document.getElementById('auth-email');
+    const passwordInput = document.getElementById('auth-password');
+    const errorMsg = document.getElementById('auth-error-msg');
+
+    // 切換到「登入」標籤
+    tabLogin.addEventListener('click', () => {
+        isLoginMode = true;
+        tabLogin.style.background = 'var(--onene-yellow)'; tabLogin.style.color = '#fff';
+        tabRegister.style.background = 'rgba(0,0,0,0.05)'; tabRegister.style.color = 'var(--text-muted)';
+        authTitle.innerText = '會員登入';
+        authSubmitBtn.innerText = '確認登入';
+        errorMsg.style.display = 'none';
+    });
+
+    // 切換到「註冊」標籤
+    tabRegister.addEventListener('click', () => {
+        isLoginMode = false;
+        tabRegister.style.background = 'var(--onene-yellow)'; tabRegister.style.color = '#fff';
+        tabLogin.style.background = 'rgba(0,0,0,0.05)'; tabLogin.style.color = 'var(--text-muted)';
+        authTitle.innerText = '註冊新帳號';
+        authSubmitBtn.innerText = '確認註冊';
+        errorMsg.style.display = 'none';
+    });
+
+    // 側邊欄的按鈕：點擊後不再跳 prompt，而是打開自訂表單
+    loginBtn.addEventListener('click', () => {
+        emailInput.value = ''; // 清空欄位
+        passwordInput.value = '';
+        errorMsg.style.display = 'none';
+        tabLogin.click(); // 預設先跳到登入頁
+        openModal('auth-modal'); // 呼叫開視窗函數
+    });
+
+    // 送出表單按鈕
+    authSubmitBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        errorMsg.style.display = 'none';
+
+        if (!email || !password) {
+            errorMsg.innerText = '請輸入信箱與密碼';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        if (!isLoginMode && password.length < 8) {
+            errorMsg.innerText = '註冊密碼至少需要 8 個字元喔！';
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        authSubmitBtn.innerText = '處理中...';
+        authSubmitBtn.disabled = true;
 
         try {
-            await pb.collection('users').authWithPassword(email, password);
-            alert('登入成功！歡迎回來補充能量。');
-            checkLoginStatus();
-        } catch (err) {
-            try {
+            if (isLoginMode) {
+                // 執行登入
+                await pb.collection('users').authWithPassword(email, password);
+                alert('登入成功！歡迎回來補充能量。');
+                closeModal('auth-modal');
+                checkLoginStatus();
+            } else {
+                // 執行註冊 (同時夾帶本地設定)
                 await pb.collection('users').create({
                     email: email,
                     password: password,
@@ -917,17 +1008,24 @@ function initAuth() {
                     themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
                     starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),
                     lastDate: new Date().toLocaleDateString(),
-                    // 🚀 註冊時，一併把當下的設定開關存給新帳號
                     soundEnabled: document.getElementById('toggle-sound').checked,
                     vibEnabled: document.getElementById('toggle-vibration').checked,
                     fsDefault: document.getElementById('toggle-fullscreen-default').checked
                 });
+                // 註冊完直接幫他登入
                 await pb.collection('users').authWithPassword(email, password);
                 alert('註冊成功！已經為您建立專屬帳號並備份當前進度。');
+                closeModal('auth-modal');
                 checkLoginStatus();
-            } catch (registerErr) {
-                alert('登入/註冊失敗。請檢查信箱格式，或確保密碼超過 8 個字元喔！');
             }
+        } catch (err) {
+            errorMsg.innerText = isLoginMode 
+                ? '登入失敗，請檢查信箱或密碼是否正確。' 
+                : '註冊失敗，信箱可能已被使用，或格式不正確。';
+            errorMsg.style.display = 'block';
+        } finally {
+            authSubmitBtn.innerText = isLoginMode ? '確認登入' : '確認註冊';
+            authSubmitBtn.disabled = false;
         }
     });
 
