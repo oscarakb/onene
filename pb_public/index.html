@@ -972,28 +972,40 @@ function initAuth() {
                 nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto';
             }
 
+            // 🌟 修正點 1：在去資料庫要資料「之前」，先把該隱藏的、該改字的 UI 先處理好！
             chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">能量讀取中...</div>';
             totalCountEl.innerText = '0';
+            document.getElementById('label-total-count').innerText = `${month} 月總計`;
+            
+            const weeklyBlock = document.getElementById('weekly-stats-block');
+            const weeklyCountEl = document.getElementById('stats-weekly-count');
+            
+            // 判斷是否為「現在這個月」，決定本週區塊一開始要不要出現
+            if (year === now.getFullYear() && month === now.getMonth() + 1) {
+                weeklyBlock.style.display = 'block'; 
+                weeklyCountEl.innerText = '–'; // 先顯示等待橫線
+            } else {
+                weeklyBlock.style.display = 'none'; // 過去的月份，立刻無情隱藏！
+            }
 
             try {
-                // 🕒 計算該月的第一天和最後一天 (格式轉換為 ISO 字串供 PocketBase 查詢)
-                // 本月第一天：例如 2026-03-01 00:00:00.000Z
+                // 🕒 計算該月的第一天和最後一天
                 const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString().replace('T', ' ');
-                // 下個月的第一天：用來當作本月的結束界線
                 const endDate = new Date(Date.UTC(year, month, 1)).toISOString().replace('T', ' ');
 
-                // 🚀 加入時間過濾器：created >= 月初 且 created < 下個月初
+                // 🚀 加入時間過濾器去要資料
                 const records = await pb.collection('practice_logs').getFullList({
                     filter: `user = "${pb.authStore.model.id}" && created >= "${startDate}" && created < "${endDate}"`,
                     requestKey: null 
                 });
                 
+                // 🌟 如果沒有紀錄，在這裡提前結束也沒關係了，因為我們上面已經把 UI 處理好了！
                 if (records.length === 0) {
                     chartContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; background: rgba(0,0,0,0.01); border-radius: 12px; margin-top: 20px;">${month} 月份還沒有練習紀錄喔。<br>每一次的開始都不嫌晚！</div>`;
                     return;
                 }
 
-                // 統計分組 (跟之前一樣)
+                // 統計分組
                 const statsMap = {};
                 records.forEach(record => {
                     const title = record.cardTitle || '未知練習';
@@ -1007,31 +1019,19 @@ function initAuth() {
                 const totalCount = records.length;
                 const maxCount = rawStats[0].count;
 
-                // 🚀 新增：更新左邊的「該月總計」文字與數字
-                document.getElementById('label-total-count').innerText = `${month} 月總計`;
+                // 更新左邊的數字
                 totalCountEl.innerText = totalCount;
 
-                // 🚀 計算與顯示「本週累計」
-                const weeklyBlock = document.getElementById('weekly-stats-block');
-                const weeklyCountEl = document.getElementById('stats-weekly-count');
-                
-                // 判斷：只有在觀看「真實的現在這個月」時，才顯示區塊並計算
+                // 🌟 修正點 2：只有在「本月」且「有資料」時，才計算本週次數
                 if (year === now.getFullYear() && month === now.getMonth() + 1) {
-                    weeklyBlock.style.display = 'block'; // 顯示本週區塊
-                    
-                    // 找出這個禮拜一的日期
                     const today = new Date();
                     const dayOfWeek = today.getDay() || 7; 
                     today.setHours(0, 0, 0, 0);
                     const thisMonday = new Date(today);
                     thisMonday.setDate(today.getDate() - dayOfWeek + 1);
                     
-                    // 篩選出大於等於本週一的數量
                     const weeklyCount = records.filter(r => new Date(r.created.replace(' ', 'T')) >= thisMonday).length;
                     weeklyCountEl.innerText = weeklyCount;
-                } else {
-                    // 🌟 如果是在看過去的月份，直接把整個「本週累計」的方塊隱藏起來！
-                    weeklyBlock.style.display = 'none'; 
                 }
 
                 // 畫出圖表
