@@ -166,6 +166,7 @@
         .card.fullscreen-mode {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;
             margin: 0; border: none; border-radius: 0; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column;
+            overscroll-behavior: contain; /* 🌟 新增：防止滑動穿透 */
         }
         .card.fullscreen-mode .action-close { margin-top: auto; border-radius: 0; min-height: 52px; }
 
@@ -263,6 +264,7 @@
             display: flex; flex-direction: column;
             transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto; padding: 0;
+            overscroll-behavior: contain; /* 🌟 新增：防止滑動穿透 */
         }
         .app-modal.is-active { transform: translateY(0); }
         
@@ -377,12 +379,17 @@
                 <input type="email" id="auth-email" placeholder="your@email.com" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-light); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.3s;">
             </div>
 
-            <div style="margin-bottom: 25px; text-align: left;">
+            <div style="margin-bottom: 15px; text-align: left;">
                 <label style="display: block; font-size: 0.85rem; margin-bottom: 8px; font-weight: 500; color: var(--text-main);">密碼 <span style="font-size: 0.75rem; opacity: 0.6;">(至少 8 碼)</span></label>
                 <input type="password" id="auth-password" placeholder="••••••••" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-light); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.3s;">
             </div>
 
-            <button id="auth-submit-btn" style="width: 100%; background: var(--onene-yellow); color: #fff; border: none; padding: 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s;">確認登入</button>
+            <div id="auth-confirm-group" style="margin-bottom: 25px; text-align: left; display: none;">
+                <label style="display: block; font-size: 0.85rem; margin-bottom: 8px; font-weight: 500; color: var(--text-main);">再次輸入密碼</label>
+                <input type="password" id="auth-password-confirm" placeholder="••••••••" style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-light); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.3s;">
+            </div>
+
+            <button id="auth-submit-btn" style="width: 100%; background: var(--onene-yellow); color: #fff; border: none; padding: 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s; margin-top: 10px;">確認登入</button>
             
             <div id="auth-error-msg" style="color: var(--onene-red); font-size: 0.85rem; margin-top: 15px; text-align: center; display: none; font-weight: 500;">錯誤訊息</div>
         </div>
@@ -826,8 +833,14 @@ function loadSettings() {
 // ==========================================
 // Settings Modal & Toggle Logic
 // ==========================================
-function openModal(modalId) { document.getElementById(modalId).classList.add('is-active'); }
-function closeModal(modalId) { document.getElementById(modalId).classList.remove('is-active'); }
+function openModal(modalId) { 
+    document.getElementById(modalId).classList.add('is-active'); 
+    document.body.style.overflow = 'hidden'; // 🌟 鎖定背景網頁，禁止滑動
+}
+function closeModal(modalId) { 
+    document.getElementById(modalId).classList.remove('is-active'); 
+    document.body.style.overflow = ''; // 🌟 關閉視窗時，把背景滑動權限還回去
+}
 
 // 儲存設定並同步至雲端
 async function saveSettings() {
@@ -928,8 +941,8 @@ function initAuth() {
         }
     }
 
-// ==========================================
-    // 全新：自訂登入 / 註冊表單邏輯
+    // ==========================================
+    // 全新：自訂登入 / 註冊表單邏輯 (含密碼確認)
     // ==========================================
     let isLoginMode = true; // 預設為登入模式
     const authModal = document.getElementById('auth-modal');
@@ -939,6 +952,9 @@ function initAuth() {
     const authSubmitBtn = document.getElementById('auth-submit-btn');
     const emailInput = document.getElementById('auth-email');
     const passwordInput = document.getElementById('auth-password');
+    // 🌟 新抓取確認密碼的元素
+    const confirmGroup = document.getElementById('auth-confirm-group');
+    const passwordConfirmInput = document.getElementById('auth-password-confirm');
     const errorMsg = document.getElementById('auth-error-msg');
 
     // 切換到「登入」標籤
@@ -949,6 +965,7 @@ function initAuth() {
         authTitle.innerText = '會員登入';
         authSubmitBtn.innerText = '確認登入';
         errorMsg.style.display = 'none';
+        confirmGroup.style.display = 'none'; // 登入時隱藏確認密碼
     });
 
     // 切換到「註冊」標籤
@@ -959,21 +976,24 @@ function initAuth() {
         authTitle.innerText = '註冊新帳號';
         authSubmitBtn.innerText = '確認註冊';
         errorMsg.style.display = 'none';
+        confirmGroup.style.display = 'block'; // 註冊時顯示確認密碼
     });
 
-    // 側邊欄的按鈕：點擊後不再跳 prompt，而是打開自訂表單
+    // 側邊欄的按鈕：打開自訂表單
     loginBtn.addEventListener('click', () => {
-        emailInput.value = ''; // 清空欄位
+        emailInput.value = ''; 
         passwordInput.value = '';
+        passwordConfirmInput.value = ''; // 清空確認密碼
         errorMsg.style.display = 'none';
         tabLogin.click(); // 預設先跳到登入頁
-        openModal('auth-modal'); // 呼叫開視窗函數
+        openModal('auth-modal'); 
     });
 
     // 送出表單按鈕
     authSubmitBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         const password = passwordInput.value;
+        const passwordConfirm = passwordConfirmInput.value; // 取得確認密碼
         errorMsg.style.display = 'none';
 
         if (!email || !password) {
@@ -982,10 +1002,18 @@ function initAuth() {
             return;
         }
 
-        if (!isLoginMode && password.length < 8) {
-            errorMsg.innerText = '註冊密碼至少需要 8 個字元喔！';
-            errorMsg.style.display = 'block';
-            return;
+        // 🌟 針對註冊模式的防呆檢查
+        if (!isLoginMode) {
+            if (password.length < 8) {
+                errorMsg.innerText = '註冊密碼至少需要 8 個字元喔！';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            if (password !== passwordConfirm) {
+                errorMsg.innerText = '兩次輸入的密碼不一致，請重新確認！';
+                errorMsg.style.display = 'block';
+                return;
+            }
         }
 
         authSubmitBtn.innerText = '處理中...';
@@ -999,11 +1027,11 @@ function initAuth() {
                 closeModal('auth-modal');
                 checkLoginStatus();
             } else {
-                // 執行註冊 (同時夾帶本地設定)
+                // 執行註冊 (將確認密碼一併傳給 PocketBase)
                 await pb.collection('users').create({
                     email: email,
                     password: password,
-                    passwordConfirm: password,
+                    passwordConfirm: passwordConfirm, // 🌟 這裡改成真實的第二次輸入
                     theme: localStorage.getItem('oneneSavedTheme') || 'default',
                     themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
                     starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),

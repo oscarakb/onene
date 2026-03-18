@@ -20,9 +20,10 @@ class BaseCardController {
         }); 
     }
 
-    applyFullscreenSetting() {
+        applyFullscreenSetting() {
         if (localStorage.getItem('oneneFullscreenDefault') === 'true' && !this.el.classList.contains('fullscreen-mode')) {
             this.el.classList.add('fullscreen-mode');
+            document.body.style.overflow = 'hidden'; // 🌟 自動進入全螢幕時，鎖定背景
         }
     }
     
@@ -38,16 +39,22 @@ class BaseCardController {
         this.el.style.minHeight = ''; this.maxHeight = 0;
         this.el.innerHTML = `<div class="breathing-overlay"></div><span class="material-symbols-rounded card-icon">${this.data.icon}</span><div class="card-text-group"><div class="font-bold">${this.data.title}</div>${this.data.subtitle ? `<div class="text-xs mt-5 opacity-80">${this.data.subtitle}</div>` : ''}</div>`;
         this.isActive = false; 
+        document.body.style.overflow = ''; // 🌟 卡片重置關閉時，確保背景解鎖
         if (typeof this.onCloseCallback === 'function') { this.onCloseCallback(this.data.id); }
     }
-    handleAction(action, target) { 
+        handleAction(action, target) { 
         if (action === 'close-card') { 
             this.el.classList.remove('fullscreen-mode'); 
+            document.body.style.overflow = ''; // 🌟 手動關閉全螢幕卡片時，解鎖背景
             this.resetDOM(); 
         }
         if (action === 'toggle-fullscreen') {
             const isEnteringFullscreen = !this.el.classList.contains('fullscreen-mode');
             this.el.classList.toggle('fullscreen-mode');
+            
+            // 🌟 點擊右上角切換按鈕時，同步切換背景的鎖定狀態
+            document.body.style.overflow = isEnteringFullscreen ? 'hidden' : '';
+
             const icon = target.querySelector('.material-symbols-rounded');
             if (icon) { icon.innerText = this.el.classList.contains('fullscreen-mode') ? 'fullscreen_exit' : 'fullscreen'; }
             
