@@ -349,9 +349,10 @@
                 <button id="google-login-btn" style="background: #fff; color: #444; border: 1px solid #ddd; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 16px; height: 16px;">
                     Google
-                <button id="view-stats-btn" style="display: none; background: var(--onene-purple); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;">📊 我的練習統計</button>
                 </button>
             </div>
+            <button id="view-stats-btn" style="display: none; background: var(--onene-purple); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;">📊 我的練習統計</button>
+
         </div>
     </aside>
     
@@ -897,20 +898,9 @@ function initAuth() {
     const googleLoginBtn = document.getElementById('google-login-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const userStatus = document.getElementById('user-status');
-    
+
 // 在 initAuth 裡抓取這顆按鈕
     const viewStatsBtn = document.getElementById('view-stats-btn');
-
-    // ... (尋找 checkLoginStatus 函數) ...
-    function checkLoginStatus() {
-        if (pb.authStore.isValid) {
-            // ... (原本登入成功顯示的東西) ...
-            if(viewStatsBtn) viewStatsBtn.style.display = 'block'; // 登入後顯示統計按鈕
-        } else {
-            // ... (原本登出顯示的東西) ...
-            if(viewStatsBtn) viewStatsBtn.style.display = 'none'; // 未登入隱藏
-        }
-    }
 
     // 🌟 點擊按鈕，去後端抓資料並統計
     if (viewStatsBtn) {
@@ -1006,12 +996,14 @@ function initAuth() {
             loginBtn.style.display = 'none';
             if(googleLoginBtn) googleLoginBtn.style.display = 'none'; 
             logoutBtn.style.display = 'flex';
+            if(viewStatsBtn) viewStatsBtn.style.display = 'block'; // 🌟 登入後顯示統計按鈕
             syncDataFromDB();
         } else {
             userStatus.innerText = '尚未登入';
             loginBtn.style.display = 'block';
             if(googleLoginBtn) googleLoginBtn.style.display = 'flex'; 
             logoutBtn.style.display = 'none';
+            if(viewStatsBtn) viewStatsBtn.style.display = 'none'; // 🌟 未登入隱藏
         }
     }
 
