@@ -381,6 +381,215 @@ class BubbleController extends BaseCardController {
     }
     pop(bubbleEl) {} 
 }
+// ==========================================
+// 轉念流沙畫控制器 (速度調校 + 高度鎖定修復)
+// ==========================================
+class SandPaintingController extends BaseCardController {
+    constructor(el, data, onClose) {
+        super(el, data, onClose);
+        this.ctx = null;
+        this.isDrawing = false;
+        this.animationFrame = null;
+        this.tempCanvas = null;
+        this.canvasEl = null;
+        this._lockHeight = false; // 🌟 解決卡片縮不回去的關鍵旗標
+    }
+
+    start() {
+        if (this.isActive) return;
+        this.isActive = true;
+        this.applyFullscreenSetting();
+        this.el.classList.add('pop-active');
+        this.renderIntro();
+    }
+
+    renderIntro() {
+        this.el.innerHTML = this.getSharedUI() + `
+            <div class="card-body">
+                <span class="material-symbols-rounded icon-lg mb-10">hourglass_empty</span>
+                <div class="text-lg mt-15 mb-15">轉念流沙畫</div>
+                <p class="text-sm opacity-90 mb-25 line-height-lg">
+                    把想忘掉的事情寫下來...<br>讓它隨細沙靜靜沉澱，回歸平靜。
+                </p>
+                <div class="start-btn" data-action="start-sand-canvas">開始轉念</div>
+            </div>
+            <div data-action="close-card" class="action-close">✕ 結束練習</div>
+        `;
+        this.syncHeight();
+    }
+
+    // 🌟 覆寫 syncHeight：在縮小過程中強制禁止 BaseController 鎖定高度
+    syncHeight() {
+        if (this._lockHeight) return; 
+        super.syncHeight();
+    }
+
+    // 🌟 核心修正：手動接管全螢幕切換邏輯
+    handleAction(action, target) {
+        if (action === 'toggle-fullscreen') {
+            const isExiting = this.el.classList.contains('fullscreen-mode');
+            if (isExiting) {
+                // 1. 縮小時立刻強制斷開高度連線，清除殘留樣式
+                this._lockHeight = true;
+                this.maxHeight = 0;
+                this.el.style.minHeight = '0px'; 
+                this.el.style.height = 'auto';
+            }
+
+            super.handleAction(action, target);
+
+            if (isExiting) {
+                // 2. 等待動畫徹底結束 (500ms)，確保卡片縮小後才解鎖重新測量
+                setTimeout(() => {
+                    this._lockHeight = false;
+                    this.maxHeight = 0;
+                    this.el.style.minHeight = '0px';
+                    requestAnimationFrame(() => this.syncHeight());
+                }, 500); 
+            }
+            return;
+        }
+
+        super.handleAction(action, target);
+        if (action === 'start-sand-canvas') { this.renderCanvas(); }
+    }
+
+    renderCanvas() {
+        this.el.innerHTML = this.getSharedUI() + `
+            <style>
+                #sand-canvas-wrapper {
+                    width: 100%; height: 260px; background: #e3c58d; border-radius: 12px;
+                    position: relative; overflow: hidden; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+                    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); margin-top: 10px;
+                }
+                .fullscreen-mode #sand-canvas-wrapper { height: calc(100vh - 220px); }
+                .sand-safe-area { padding: 65px 15px 15px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+            </style>
+            <div class="card-body sand-safe-area">
+                <div class="text-xs opacity-70 mb-10">在沙地上慢慢寫下你的煩惱...</div>
+                <div id="sand-canvas-wrapper">
+                    <canvas id="sand-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; touch-action:none; cursor:crosshair;"></canvas>
+                </div>
+                <div class="mt-15 text-xs opacity-60">字跡會原地消散，直到重獲清明</div>
+            </div>
+            <div data-action="close-card" class="action-close">✕ 結束練習</div>
+        `;
+        
+        this.maxHeight = 0;
+        this.syncHeight();
+        
+        requestAnimationFrame(() => {
+            setTimeout(() => this.initCanvas(), 100);
+        });
+    }
+
+    initCanvas() {
+        this.canvasEl = this.el.querySelector('#sand-canvas');
+        if (!this.canvasEl) return;
+        this.ctx = this.canvasEl.getContext('2d', { willReadFrequently: true });
+        this.updateCanvasDimensions();
+
+        const onStart = (e) => {
+            this.isDrawing = true;
+            this.setBrushStyle();
+            const pos = this.getPos(e);
+            this.ctx.beginPath();
+            this.ctx.moveTo(pos.x, pos.y);
+        };
+        const onMove = (e) => {
+            if (!this.isDrawing) return;
+            const pos = this.getPos(e);
+            this.ctx.lineTo(pos.x, pos.y);
+            this.ctx.stroke();
+        };
+
+        this.canvasEl.onmousedown = onStart;
+        this.canvasEl.onmousemove = onMove;
+        window.onmouseup = () => { this.isDrawing = false; };
+        
+        this.canvasEl.ontouchstart = (e) => { onStart(e.touches[0]); return false; };
+        this.canvasEl.ontouchmove = (e) => { onMove(e.touches[0]); return false; };
+        this.canvasEl.ontouchend = () => { this.isDrawing = false; };
+
+        if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+        this.animateSand();
+    }
+
+    setBrushStyle() {
+        if (!this.ctx) return;
+        this.ctx.strokeStyle = '#634a2e'; // 穩定的深沙色，避免色偏
+        this.ctx.lineWidth = 14; 
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+    }
+
+    updateCanvasDimensions() {
+        const rect = this.canvasEl.parentElement.getBoundingClientRect();
+        const nw = Math.floor(rect.width);
+        const nh = Math.floor(rect.height);
+        
+        if (this.canvasEl.width !== nw || this.canvasEl.height !== nh) {
+            const backup = document.createElement('canvas');
+            backup.width = this.canvasEl.width;
+            backup.height = this.canvasEl.height;
+            if (this.canvasEl.width > 0) backup.getContext('2d').drawImage(this.canvasEl, 0, 0);
+            this.canvasEl.width = nw;
+            this.canvasEl.height = nh;
+            this.ctx.drawImage(backup, 0, 0, nw, nh);
+            this.setBrushStyle();
+            this.tempCanvas = null; 
+        }
+    }
+
+    getPos(e) {
+        const rect = this.canvasEl.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * (this.canvasEl.width / rect.width),
+            y: (e.clientY - rect.top) * (this.canvasEl.height / rect.height)
+        };
+    }
+
+    animateSand() {
+        const loop = () => {
+            if (!this.isActive || !this.ctx || !this.canvasEl) return;
+            this.updateCanvasDimensions();
+
+            if (!this.tempCanvas) this.tempCanvas = document.createElement('canvas');
+            if (this.tempCanvas.width !== this.canvasEl.width || this.tempCanvas.height !== this.canvasEl.height) {
+                this.tempCanvas.width = this.canvasEl.width;
+                this.tempCanvas.height = this.canvasEl.height;
+            }
+            
+            const tCtx = this.tempCanvas.getContext('2d');
+            tCtx.clearRect(0, 0, this.tempCanvas.width, this.tempCanvas.height);
+            tCtx.drawImage(this.canvasEl, 0, 0);
+
+            this.ctx.clearRect(0, 0, this.canvasEl.width, this.canvasEl.height);
+            this.ctx.save();
+            
+            // 🌟 消失速度調校：
+            // 從 0.9992 改為 0.996。
+            // 這會讓字跡比之前更快消失，但仍保有足夠時間寫完中文字。
+            this.ctx.globalAlpha = 0.996; 
+            
+            // 保持原地消散質感，配合極微模糊
+            this.ctx.filter = 'blur(0.2px)'; 
+            const jitterX = (Math.random() - 0.5) * 0.4;
+            const jitterY = (Math.random() - 0.5) * 0.4;
+
+            this.ctx.drawImage(this.tempCanvas, jitterX, jitterY); 
+            this.ctx.restore();
+
+            this.animationFrame = requestAnimationFrame(loop);
+        };
+        this.animationFrame = requestAnimationFrame(loop);
+    }
+
+    destroy() {
+        this.isActive = false;
+        if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    }
+}
 
 // ==========================================
 // 3. Controller Prototype Extensions (擴展硬體功能)
