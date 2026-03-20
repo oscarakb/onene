@@ -163,7 +163,7 @@ class AnswerBookController extends BaseCardController {
     showRitual() { 
         this.el.innerHTML = this.getSharedUI() + `
             <div class="card-body-result">
-                <div class="text-lg tracking-wider opacity-90 font-normal">翻閱命運中...</div>
+                <div class="text-lg tracking-wider opacity-90 font-normal">正在連接宇宙能量...</div>
                 <div class="loading-dots">
                     <div class="loading-dot"></div>
                     <div class="loading-dot"></div>
@@ -181,13 +181,40 @@ class AnswerBookController extends BaseCardController {
         const canGetStar = (now - this.lastStarTime) > cooldown;
 
         this.el.innerHTML = this.getSharedUI() + `
-            <div class="card-body-result">
-                <div class="text-sm opacity-70 tracking-wide mb-5">解答</div>
-                <div class="text-xl mb-15 line-height-lg">「 ${answer} 」</div>
+            <style>
+                /* 適中的文字呼吸光動畫 */
+                @keyframes answerGlowBreathe {
+                    0%, 100% {
+                        /* 基礎微光 */
+                        text-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
+                        opacity: 0.85;
+                    }
+                    50% {
+                        /* 光暈強度調回適中，比上一版亮，但不會刺眼 */
+                        text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 20px rgba(230, 211, 245, 0.45);
+                        opacity: 1;
+                    }
+                }
+                .answer-breathing-text {
+                    animation: answerGlowBreathe 6s ease-in-out infinite;
+                }
+            </style>
+
+            <div class="card-body-result" style="min-height: 380px; position: relative;">
                 
-                ${!canGetStar ? `<div class="text-xs opacity-50 mb-20">能量正在冷卻中，請靜心感受文字...</div>` : ''}
+                <div class="w-100 d-flex flex-col align-center justify-center">
+                    <div class="text-sm opacity-50 tracking-wide mb-15">解答</div>
+                    
+                    <div class="text-xl line-height-lg font-bold tracking-wider text-center w-100 answer-breathing-text" style="padding: 0 30px; box-sizing: border-box;">
+                        ${answer}
+                    </div>
+                </div>
                 
-                <div data-action="restart-answer" class="btn-outline">↻ 再算一次</div>
+                <div class="text-center w-100" style="position: absolute; bottom: 40px; left: 0;">
+                    <div data-action="restart-answer" class="text-sm" style="display: inline-block; padding: 8px 24px; border: 1px solid rgba(255,255,255,0.2); border-radius: 25px; cursor: pointer; background: rgba(255,255,255,0.03); color: #e6d3f5; transition: all 0.2s ease;">
+                        ↻ 再算一次
+                    </div>
+                </div>
             </div>
             <div data-action="close-card" class="action-close">✕ 結束練習</div>
         `; 
