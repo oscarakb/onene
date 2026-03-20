@@ -179,7 +179,7 @@
         .action-fullscreen:hover { background: rgba(255, 255, 255, 0.35); transform: scale(1.05); }
         .action-fullscreen:active { transform: scale(0.95); }
 
-        /* UI Utilities */
+        /* ================= 動態生成的卡片內容 UI Utilities (千萬不能刪！) ================= */
         .card-body { padding: 40px 20px; text-align: center; color: #fff; animation: fadeIn 0.5s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%; z-index: 2; }
         .card-body-result { padding: 60px 20px; text-align: center; color: #fff; animation: fadeIn 0.8s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%; z-index: 2; }
         
@@ -304,7 +304,7 @@
         if (initTheme && initTheme !== 'default') {
             document.documentElement.setAttribute('data-theme', initTheme);
         }
-</script>
+    </script>
 </head>
 <body>
 <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.5/dist/pocketbase.umd.js"></script>
@@ -341,18 +341,13 @@
             </div>
         </div>
         
-<div class="auth-card" style="background: var(--card-bg); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); transition: background-color 0.4s, border-color 0.4s; flex-wrap: wrap; gap: 10px;">
-            <div id="user-status" style="font-size: 0.9rem; font-weight: 700; color: var(--onene-blue); width: 100%;">尚未登入</div>
-            <div style="display: flex; gap: 8px;">
-                <button id="login-btn" style="background: var(--onene-yellow); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: transform 0.2s;">信箱登入</button>
-                
-                <button id="google-login-btn" style="background: #fff; color: #444; border: 1px solid #ddd; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 16px; height: 16px;">
-                    Google
-                </button>
-            </div>
-            <button id="view-stats-btn" style="display: none; background: var(--onene-purple); color: #fff; border: none; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;">📊 我的練習統計</button>
-
+        <div class="auth-card" style="background: var(--card-bg); border-radius: 20px; padding: 18px 20px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); transition: background-color 0.4s, border-color 0.4s; gap: 12px;">
+            <div id="user-status" style="font-size: 0.9rem; font-weight: 700; color: var(--onene-blue); width: 100%; text-align: center;">尚未登入</div>
+            
+            <button id="view-stats-btn" style="background: var(--onene-purple); color: #fff; border: none; padding: 12px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(142, 81, 170, 0.2);">
+                <span class="material-symbols-rounded" style="font-size: 20px;">analytics</span>
+                我的練習統計
+            </button>
         </div>
     </aside>
     
@@ -360,6 +355,7 @@
 </div>
 
 <footer>© 2026 昂昂向上 Inno-Research</footer>
+
 <div id="stats-modal" class="app-modal">
     <div class="modal-header">
         <div class="modal-close-btn" onclick="closeModal('stats-modal')">
@@ -372,7 +368,7 @@
     </div>
     <div class="modal-body" style="background: var(--bg-light);">
         <div class="settings-list" style="padding: 24px; background: var(--card-bg);">
- <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.03); padding: 8px 16px; border-radius: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.03); padding: 8px 16px; border-radius: 20px;">
                 <button id="stats-prev-month" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 5px;">◀</button>
                 <div id="stats-current-month" style="font-weight: bold; color: var(--onene-purple); font-size: 1.1rem; letter-spacing: 1px;">2026 年 3 月</div>
                 <button id="stats-next-month" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); padding: 5px;">▶</button>
@@ -436,6 +432,17 @@
 
             <button id="auth-submit-btn" style="width: 100%; background: var(--onene-yellow); color: #fff; border: none; padding: 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s; margin-top: 10px;">確認登入</button>
             
+            <div style="display: flex; align-items: center; margin: 20px 0; gap: 10px;">
+                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">或使用</div>
+                <div style="flex: 1; height: 1px; background: var(--border-color);"></div>
+            </div>
+
+            <button id="google-login-btn" style="width: 100%; background: #fff; color: #444; border: 1px solid #ddd; padding: 12px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 18px; height: 18px;">
+                使用 Google 帳號繼續
+            </button>
+
             <div id="auth-error-msg" style="color: var(--onene-red); font-size: 0.85rem; margin-top: 15px; text-align: center; display: none; font-weight: 500;">錯誤訊息</div>
         </div>
     </div>
@@ -472,6 +479,7 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            
             <div class="setting-item" onclick="openModal('instructions-modal')">
                 <div class="setting-label"><span class="material-symbols-rounded">menu_book</span> 使用說明</div>
                 <span class="material-symbols-rounded">chevron_right</span>
@@ -488,7 +496,7 @@
                 <div class="setting-label"><span class="material-symbols-rounded">policy</span> 隱私聲明</div>
                 <span class="material-symbols-rounded">chevron_right</span>
             </div>
-        <a href="#" target="_blank" class="setting-item" style="text-decoration: none;">
+            <a href="#" id="official-website-link" target="_blank" class="setting-item" style="text-decoration: none;">
                 <div class="setting-label"><span class="material-symbols-rounded">language</span> 官方網站</div>
                 <span class="material-symbols-rounded">open_in_new</span>
             </a>
@@ -497,109 +505,53 @@
         <button id="logout-btn" style="display: none; width: 100%; background: var(--onene-red); color: #fff; border: none; padding: 14px; border-radius: 20px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 24px; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 10px rgba(211, 84, 70, 0.2);">
             <span class="material-symbols-rounded">logout</span> 登出帳號
         </button>
-
     </div>
 </div>
 
 <div id="instructions-modal" class="app-modal">
     <div class="modal-header">
-        <div class="modal-close-btn" onclick="closeModal('instructions-modal')">
-            <span class="material-symbols-rounded">arrow_back</span>
-        </div>
-        <div class="text-xl font-bold mt-10">使用說明</div>
+        <div class="modal-close-btn" onclick="closeModal('instructions-modal')"><span class="material-symbols-rounded">arrow_back</span></div>
+        <div class="text-xl font-bold mt-10" id="instructions-title">使用說明</div>
     </div>
     <div class="modal-body">
-        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);">
-            <p><strong>歡迎來到昂昂向上！</strong></p>
-            <p>這裡是一個微療癒的正念空間。你可以透過點擊首頁的不同卡片，進行短暫的情緒重置與自我調適。</p>
-            <ul style="padding-left: 20px; margin-top: 10px;">
-                <li style="margin-bottom: 8px;"><strong>答案之書：</strong>藉由默念問題的儀式感，中斷當下的焦慮迴圈。將注意力轉移至隨機出現的文字，為思考提供全新的視角與啟發。</li>
-                <li style="margin-bottom: 8px;"><strong>心情斷捨離：</strong>採用意象化的「三箱法」。第一步將煩惱具象化並捨棄（轉移焦點）；第二步封存未知的擔憂（設立心理邊界）；第三步提取微小成就（正向強化），有效截斷負面情緒蔓延。</li>
-                <li style="margin-bottom: 8px;"><strong>集氣能量球：</strong>透過長按的觸覺反饋與視覺上的膨脹動畫，將抽象的壓力釋放，轉化為具體的充能過程，幫助心流重新聚焦於當下。</li>
-                <li style="margin-bottom: 8px;"><strong>情緒急救箱：</strong>針對當下的情緒狀態，提供具體且容易執行的拆解動作（例如視覺尋找、觸覺定錨）。透過微小的核取清單建立掌控感，幫助你快速從情緒淹沒中恢復平靜。</li>
-                <li style="margin-bottom: 8px;"><strong>444 減壓呼吸練習：</strong>結合視覺與聲音的節奏導引，幫助調節呼吸頻率。透過規律的吸氣、憋氣、吐氣，主動放緩節奏，找回對身體的主導權。</li>
-                <li style="margin-bottom: 8px;"><strong>眼球放鬆操：</strong>提供五種醫學基礎的視覺訓練軌跡，幫助放鬆眼部肌肉與睫狀肌，減少數位視覺疲勞。</li>
-                <li><strong>減壓氣泡紙：</strong>模擬捏碎氣泡紙的 ASMR 聽覺與觸覺反饋。提供無害且具重複性的動作，是釋放手部躁動與微小生活壓力的極佳出口。</li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-<div id="about-modal" class="app-modal">
-    <div class="modal-header">
-        <div class="modal-close-btn" onclick="closeModal('about-modal')">
-            <span class="material-symbols-rounded">arrow_back</span>
-        </div>
-        <div class="text-xl font-bold mt-10">關於我們</div>
-    </div>
-    <div class="modal-body">
-        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 1.5rem; font-weight: 700; color: var(--onene-yellow); letter-spacing: 2px;">PureON</div>
-                <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;">STAY PURE · STAY BRAVE</div>
-            </div>
-            <p>我們是來自台灣的 <strong>PureON</strong> 團隊。</p>
-            <p>在實體世界裡，我們打造男性專屬的飾品品牌，透過黑瑪瑙的沉穩、黑曜石的守護、以及虎眼石帶來的勇氣，結合洗鍊的銀飾，將天然水晶礦石的堅定力量融入日常穿搭。</p>
-            <p>在數位世界裡，我們開發了「昂昂向上」這款正念科技 APP。我們深信，無論是腕間的一串水晶手環，或是手機裡的一處平靜空間，都能為你打造專屬的能量結界。</p>
-            <p>希望 PureON 能在喧囂的生活中，陪伴你找回專注與平靜，時刻保持純粹，充滿勇氣地迎接每一個挑戰。</p>
+        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);" id="instructions-content">
+            資料讀取中...
         </div>
     </div>
 </div>
 
 <div id="theme-guide-modal" class="app-modal">
     <div class="modal-header">
-        <div class="modal-close-btn" onclick="closeModal('theme-guide-modal')">
-            <span class="material-symbols-rounded">arrow_back</span>
-        </div>
-        <div class="text-xl font-bold mt-10">主題配色說明</div>
+        <div class="modal-close-btn" onclick="closeModal('theme-guide-modal')"><span class="material-symbols-rounded">arrow_back</span></div>
+        <div class="text-xl font-bold mt-10" id="theme-guide-title">主題配色說明</div>
     </div>
     <div class="modal-body">
-        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);">
-            <p style="margin-bottom: 20px;">色彩擁有直接影響情緒的頻率。我們為不同的心理需求，調配了專屬的視覺防護罩：</p>
-            
-            <div style="margin-bottom: 16px;">
-                <strong style="color: #d99a00; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-rounded">palette</span> 昂昂主題 (暖鵝黃)</strong>
-                <div style="margin-top: 4px; font-size: 0.9rem; opacity: 0.9;">宛如夜晚房間裡點亮的一盞小夜燈，散發著溫暖、被安全感包圍的光芒，適合需要獲得慰藉與能量補充的時刻。</div>
-            </div>
+        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);" id="theme-guide-content">
+            資料讀取中...
+        </div>
+    </div>
+</div>
 
-            <div style="margin-bottom: 16px;">
-                <strong style="color: #666666; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-rounded">dark_mode</span> 暗黑模式 (深沉灰)</strong>
-                <div style="margin-top: 4px; font-size: 0.9rem; opacity: 0.9;">大幅降低螢幕發光帶來的視覺刺激。適合睡前使用，或當你對光線與外界干擾感到疲乏時，提供深度的視覺放鬆。</div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-                <strong style="color: #637f9e; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-rounded">texture</span> 莫蘭迪 (灰階藍)</strong>
-                <div style="margin-top: 4px; font-size: 0.9rem; opacity: 0.9;">帶有一抹灰階的寧靜藍色調。能有效幫助冷靜思緒、降低躁動，非常適合在工作前需要進入專注、理性心流時使用。</div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-                <strong style="color: #546b58; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-rounded">nature</span> ADHD 專用 (低覺醒綠)</strong>
-                <div style="margin-top: 4px; font-size: 0.9rem; opacity: 0.9;">取自大自然的大地綠色調。能減少高彩度帶來的視覺跳躍感，幫助收束容易發散的注意力，提供穩定的接地氣感受。</div>
-            </div>
-
-            <div style="margin-bottom: 16px;">
-                <strong style="color: #847996; display: flex; align-items: center; gap: 8px;"><span class="material-symbols-rounded">filter_vintage</span> HSP 專用 (防過載紫)</strong>
-                <div style="margin-top: 4px; font-size: 0.9rem; opacity: 0.9;">溫和低飽和的紫丁香色，專為高敏感族群 (HSP) 設計。提供最輕柔的視覺緩衝，有效防範感官過載，建立溫柔的心靈邊界。</div>
-            </div>
+<div id="about-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closeModal('about-modal')"><span class="material-symbols-rounded">arrow_back</span></div>
+        <div class="text-xl font-bold mt-10" id="about-title">關於我們</div>
+    </div>
+    <div class="modal-body">
+        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);" id="about-content">
+            資料讀取中...
         </div>
     </div>
 </div>
 
 <div id="privacy-modal" class="app-modal">
     <div class="modal-header">
-        <div class="modal-close-btn" onclick="closeModal('privacy-modal')">
-            <span class="material-symbols-rounded">arrow_back</span>
-        </div>
-        <div class="text-xl font-bold mt-10">隱私聲明</div>
+        <div class="modal-close-btn" onclick="closeModal('privacy-modal')"><span class="material-symbols-rounded">arrow_back</span></div>
+        <div class="text-xl font-bold mt-10" id="privacy-title">隱私聲明</div>
     </div>
     <div class="modal-body">
-        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);">
-            <p>我們非常重視您的隱私與心理安全：</p>
-            <ul style="padding-left: 20px; margin-top: 10px;">
-                <li><strong>本地儲存：</strong>您的所有設定（如主題顏色、繁星數量、開關設定）皆僅儲存於您目前的設備瀏覽器中（Local Storage）。</li>
-                <li><strong>無資料收集：</strong>我們不會將您的情緒選擇、問題或任何個人資料上傳至雲端伺服器。</li>
-                <li>請安心在這個空間裡，誠實地面對自己的情緒。</li>
-            </ul>
+        <div class="settings-list" style="padding: 24px; line-height: 1.8; color: var(--text-main);" id="privacy-content">
+            資料讀取中...
         </div>
     </div>
 </div>
@@ -610,17 +562,14 @@
 // ==========================================
 function toggleThemeMenu(e) { e.stopPropagation(); document.getElementById('theme-switcher').classList.toggle('expanded'); }
 async function setTheme(themeName, iconName) {
-    // 1. 改變畫面
     if (themeName === 'default') { document.documentElement.removeAttribute('data-theme'); } 
     else { document.documentElement.setAttribute('data-theme', themeName); }
     document.getElementById('current-theme-icon').innerText = iconName; 
     document.getElementById('theme-switcher').classList.remove('expanded');
     
-    // 2. 存入本地端
     localStorage.setItem('oneneSavedTheme', themeName); 
     localStorage.setItem('oneneSavedThemeIcon', iconName);
 
-    // 3. 【新增】如果已登入，同步到雲端資料庫
     if (typeof pb !== 'undefined' && pb.authStore.isValid) {
         try {
             await pb.collection('users').update(pb.authStore.model.id, {
@@ -670,13 +619,16 @@ class Star {
 }
 function initCanvas() { const parent = canvas.parentElement; const r = parent.getBoundingClientRect(); canvas.width = r.width; canvas.height = r.height; }
 function animateStars() { ctx.clearRect(0, 0, canvas.width, canvas.height); stars.forEach(s => { s.update(canvas.width, canvas.height, stars); s.draw(ctx); }); requestAnimationFrame(animateStars); }
-// 🌟 升級版：給星星的同時，紀錄完成了哪張卡片
+
 async function triggerStarReward(cardId = 'unknown', cardTitle = '未命名練習') { 
     addStar(true); 
-
-    // 如果使用者有登入，就把這筆紀錄寫進 PocketBase 的 practice_logs 資料表
     if (typeof pb !== 'undefined' && pb.authStore.isValid) {
         try {
+            // 🚀 新增：清除當月快取，確保下次點開報告時會重新抓取新紀錄
+            const now = new Date();
+            const cacheKey = `${now.getFullYear()}-${now.getMonth() + 1}`;
+            if (statsCache[cacheKey]) { delete statsCache[cacheKey]; }
+
             await pb.collection('practice_logs').create({
                 user: pb.authStore.model.id,
                 cardId: cardId,
@@ -705,11 +657,15 @@ async function addStar(save = true) {
         if (save) {
             localStorage.setItem('oneneStarCount', stars.length);
             
+            // 修正：檢查登入狀態並更新用戶的 starCount 欄位
             if (typeof pb !== 'undefined' && pb.authStore.isValid) {
                 try {
-                    // 呼叫後端 API，讓後端自己 +1
-                    await pb.send('/api/stars/add', { method: 'POST' });
-                } catch (e) { console.log("星星同步失敗", e); }
+                    await pb.collection('users').update(pb.authStore.model.id, {
+                        starCount: stars.length // 直接將目前的星星數量存入資料庫
+                    });
+                } catch (e) { 
+                    console.log("星星同步失敗", e); 
+                }
             }
         }
     }
@@ -721,11 +677,15 @@ function startStarTimer() {
             stars = []; 
             localStorage.setItem('oneneStarCount', 0); 
             
+            // 修正：清空資料庫中的數量
             if (typeof pb !== 'undefined' && pb.authStore.isValid) {
                 try {
-                    // 呼叫後端 API 執行清空
-                    await pb.send('/api/stars/clear', { method: 'POST' });
-                } catch (e) { console.log("清空失敗", e); }
+                    await pb.collection('users').update(pb.authStore.model.id, {
+                        starCount: 0
+                    });
+                } catch (e) { 
+                    console.log("清空同步失敗", e); 
+                }
             }
         } 
     }, 3000); 
@@ -737,44 +697,70 @@ window.addEventListener('resize', initCanvas);
 // ==========================================
 // 1. Data & Library
 // ==========================================
-// 1. 將常數 (const) 改為變數 (let)，並保留幾個預設值（以防網路連線太慢時畫面空白）
 let QUOTES_LIBRARY = ["能量讀取中...", "能量接收中..."];
 let ANSWERS_LIBRARY = ["翻閱命運中...", "請傾聽內心..."];
 
-// ==========================================
-// 建立一個專門去後端「抓資料」的非同步函數 (並發加速防閃爍版)
-// ==========================================
+// 尋找你現有的 fetchDynamicContent 函數並覆蓋成這個版本
 async function fetchDynamicContent() {
     try {
-        // 🚀 1. 讓三個請求「同時」出發，不要互相等，速度最快！
-        // 加上 .catch(() => []) 確保就算某個資料表沒東西，也不會讓整個網頁當掉
-        const quotesPromise = pb.collection('quotes').getFullList({ requestKey: null }).catch(() => []);
-        const answersPromise = pb.collection('answers').getFullList({ requestKey: null }).catch(() => []);
-        const cardsPromise = pb.collection('cards').getFullList({ filter: 'isActive = true', sort: 'sortOrder', requestKey: null }).catch(() => []);
+        // 🚀 同時發送多個請求，包含新增的 page_content
+        const [quotesData, answersData, cardsData, pagesData] = await Promise.all([
+            pb.collection('quotes').getFullList({ requestKey: null }).catch(() => []),
+            pb.collection('answers').getFullList({ requestKey: null }).catch(() => []),
+            pb.collection('cards').getFullList({ filter: 'isActive = true', sort: 'sortOrder', requestKey: null }).catch(() => []),
+            pb.collection('page_content').getFullList({ requestKey: null }).catch(() => []) // 🌟 新增這裡
+        ]);
 
-        // ⏳ 2. 等待這三個資料都抓回來
-        const [quotesData, answersData, cardsData] = await Promise.all([quotesPromise, answersPromise, cardsPromise]);
-
-        // 3. 開始把資料塞進變數裡
-        if (quotesData.length > 0) QUOTES_LIBRARY = quotesData.map(record => record.text);
-        if (answersData.length > 0) ANSWERS_LIBRARY = answersData.map(record => record.text);
+        // 處理小語與答案
+        if (quotesData.length > 0) QUOTES_LIBRARY = quotesData.map(r => r.text);
+        if (answersData.length > 0) ANSWERS_LIBRARY = answersData.map(r => r.text);
         
-        if (cardsData.length > 0) {
-            SITE_DATA.sections[0].cards = cardsData.map(record => ({
-                id: record.cardId, type: record.type, color: record.color, variant: record.variant,
-                icon: record.icon, title: record.title, subtitle: record.subtitle, action: record.action
-            }));
+        // 處理卡片渲染
+        if (cardsData.length > 0) { 
+            SITE_DATA.sections[0].cards = cardsData.map(r => ({ 
+                id: r.cardId, type: r.type, color: r.color, variant: r.variant, 
+                icon: r.icon, title: r.title, subtitle: r.subtitle, action: r.action 
+            })); 
         }
 
-        // 🌟 4. 最關鍵的一步：等「所有資料都就位」後，再一次性重新畫出畫面！
-        // 這樣就不會發生「先換字、又重畫、再換字」的閃爍現象了。
-        if (window.appInstance && !window.appInstance.activeCardId) {
-            window.appInstance.data = SITE_DATA;
+        // 🌟 處理靜態頁面內容 (將資料庫內容塞進對應的 ID)
+        if (pagesData.length > 0) {
+            pagesData.forEach(page => {
+                switch(page.key) {
+                    case 'about':
+                        if(page.title) document.getElementById('about-title').innerText = page.title;
+                        document.getElementById('about-content').innerHTML = page.content;
+                        break;
+                    case 'privacy':
+                        if(page.title) document.getElementById('privacy-title').innerText = page.title;
+                        document.getElementById('privacy-content').innerHTML = page.content;
+                        break;
+                    case 'theme':
+                        if(page.title) document.getElementById('theme-guide-title').innerText = page.title;
+                        document.getElementById('theme-guide-content').innerHTML = page.content;
+                        break;
+                    case 'instructions':
+                        if(page.title) document.getElementById('instructions-title').innerText = page.title;
+                        document.getElementById('instructions-content').innerHTML = page.content;
+                        break;
+                    case 'website':
+                        // 官方網站是處理 href 屬性，不是內文
+                        const websiteLink = document.getElementById('official-website-link');
+                        if(websiteLink) websiteLink.href = page.content; 
+                        break;
+                }
+            });
+        }
+
+        // 更新畫面
+        if (window.appInstance && !window.appInstance.activeCardId) { 
+            window.appInstance.data = SITE_DATA; 
             window.appInstance.renderSections(); 
             window.appInstance.updateQuote(); 
         }
-    } catch (err) {
-        console.error("讀取動態資料發生嚴重錯誤", err);
+
+    } catch (err) { 
+        console.error("動態資料讀取失敗", err); 
     }
 }
 
@@ -818,19 +804,12 @@ class App {
     loadSavedThemeIcon() { const savedTheme = localStorage.getItem('oneneSavedTheme'); const savedIcon = localStorage.getItem('oneneSavedThemeIcon'); if (savedTheme && savedIcon) { document.getElementById('current-theme-icon').innerText = savedIcon; } }
     updateQuote() { 
         if (QUOTES_LIBRARY.length === 0) return;
-        
-        // 1. 取得現在的時間戳記，並加上 8 小時 (轉換成台灣時區 UTC+8)
-        // 這樣可以確保在台灣時間的半夜 12 點準時換句話
         const todayDays = Math.floor((Date.now() + 8 * 60 * 60 * 1000) / 86400000);
-        
-        // 2. 用總天數去除以小語的總數量，得到的「餘數」就是今天的索引值
         const dailyIndex = todayDays % QUOTES_LIBRARY.length;
-        
-        // 3. 抓出今天的專屬小語並顯示
         const text = QUOTES_LIBRARY[dailyIndex]; 
         document.getElementById('quote-text-content').innerText = `# ${text} #`; 
     }
-        renderSections() {
+    renderSections() {
         this.container.innerHTML = this.data.sections.map(sec => `
             <section class="section-group">
                 <div id="quote-text-content" class="quote-header"># 讀取能量中 #</div>
@@ -876,7 +855,6 @@ class App {
     findCardData(id) { for (const sec of this.data.sections) { const card = sec.cards.find(c => c.id === id); if (card) return card; } return null; }
 }
 
-// 初始化讀取本地端設定開關
 function loadSettings() {
     document.getElementById('toggle-sound').checked = localStorage.getItem('oneneSoundEnabled') !== 'false';
     document.getElementById('toggle-vibration').checked = localStorage.getItem('oneneVibrationEnabled') !== 'false';
@@ -888,26 +866,22 @@ function loadSettings() {
 // ==========================================
 function openModal(modalId) { 
     document.getElementById(modalId).classList.add('is-active'); 
-    document.body.style.overflow = 'hidden'; // 🌟 鎖定背景網頁，禁止滑動
+    document.body.style.overflow = 'hidden';
 }
 function closeModal(modalId) { 
     document.getElementById(modalId).classList.remove('is-active'); 
-    document.body.style.overflow = ''; // 🌟 關閉視窗時，把背景滑動權限還回去
+    document.body.style.overflow = '';
 }
 
-// 儲存設定並同步至雲端
 async function saveSettings() {
-    // 取得畫面上開關的狀態 (true 或 false)
     const isSoundOn = document.getElementById('toggle-sound').checked;
     const isVibOn = document.getElementById('toggle-vibration').checked;
     const isFsDefault = document.getElementById('toggle-fullscreen-default').checked;
     
-    // 1. 存入本地端瀏覽器
     localStorage.setItem('oneneSoundEnabled', isSoundOn);
     localStorage.setItem('oneneVibrationEnabled', isVibOn);
     localStorage.setItem('oneneFullscreenDefault', isFsDefault);
 
-    // 🚀 2. 如果使用者已登入，立刻把這三個開關狀態同步到 PocketBase
     if (typeof pb !== 'undefined' && pb.authStore.isValid) {
         try {
             await pb.collection('users').update(pb.authStore.model.id, {
@@ -924,164 +898,149 @@ async function saveSettings() {
 // ==========================================
 // PocketBase 會員系統邏輯
 // ==========================================
-// 1. 喚醒 PocketBase (請換成你的 Railway 網址，不要加 /_/)
-// 讓系統自動偵測目前的網址，永遠不會連錯！
-    const pb = new PocketBase('https://onene.up.railway.app');
+const pb = new PocketBase('https://onene.up.railway.app');
+const statsCache = {}; // 🚀 全局快取變數 (只宣告一次)
 
 function initAuth() {
-    const loginBtn = document.getElementById('login-btn');
+    const viewStatsBtn = document.getElementById('view-stats-btn');
+    const userStatus = document.getElementById('user-status');
     const googleLoginBtn = document.getElementById('google-login-btn');
     const logoutBtn = document.getElementById('logout-btn');
-    const userStatus = document.getElementById('user-status');
 
-// 在 initAuth 裡抓取這顆按鈕
-    const viewStatsBtn = document.getElementById('view-stats-btn');
+    let currentReportDate = new Date();
 
-// ==========================================
-    // 🌟 終極效能版：按月份讀取的圖表統計 Modal
-    // ==========================================
-    if (viewStatsBtn) {
-        // 建立一個變數來記住「現在正在看哪個月」
-        let currentReportDate = new Date();
+    // 🚀 優化後的載入函數 (放在 initAuth 內部)
+    async function loadMonthlyStats(targetDate) {
+        const year = targetDate.getFullYear();
+        const month = targetDate.getMonth() + 1;
+        const cacheKey = `${year}-${month}`; // 快取索引鍵
 
-        // 把抓資料畫圖的邏輯獨立成一個函數，方便換月時重複呼叫
-        async function loadMonthlyStats(targetDate) {
-            const chartContainer = document.getElementById('stats-chart-container');
-            const totalCountEl = document.getElementById('stats-total-count');
-            const monthLabel = document.getElementById('stats-current-month');
-            const nextBtn = document.getElementById('stats-next-month');
-            
-            // 更新畫面上顯示的年月
-            const year = targetDate.getFullYear();
-            const month = targetDate.getMonth() + 1; // JavaScript 月份是 0-11，所以要 +1
-            monthLabel.innerText = `${year} 年 ${month} 月`;
-
-            // 如果看的是未來，就把「下個月」按鈕藏起來或變淡
-            const now = new Date();
-            if (year === now.getFullYear() && month === now.getMonth() + 1) {
-                nextBtn.style.opacity = '0.2'; nextBtn.style.pointerEvents = 'none';
-            } else {
-                nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto';
-            }
-
-            // 🌟 修正點 1：在去資料庫要資料「之前」，先把該隱藏的、該改字的 UI 先處理好！
-            chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">能量讀取中...</div>';
-            totalCountEl.innerText = '0';
-            document.getElementById('label-total-count').innerText = `${month} 月總計`;
-            
-            const weeklyBlock = document.getElementById('weekly-stats-block');
-            const weeklyCountEl = document.getElementById('stats-weekly-count');
-            
-            // 判斷是否為「現在這個月」，決定本週區塊一開始要不要出現
-            if (year === now.getFullYear() && month === now.getMonth() + 1) {
-                weeklyBlock.style.display = 'block'; 
-                weeklyCountEl.innerText = '–'; // 先顯示等待橫線
-            } else {
-                weeklyBlock.style.display = 'none'; // 過去的月份，立刻無情隱藏！
-            }
-
-            try {
-                // 🕒 計算該月的第一天和最後一天
-                const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString().replace('T', ' ');
-                const endDate = new Date(Date.UTC(year, month, 1)).toISOString().replace('T', ' ');
-
-                // 🚀 加入時間過濾器去要資料
-                const records = await pb.collection('practice_logs').getFullList({
-                    filter: `user = "${pb.authStore.model.id}" && created >= "${startDate}" && created < "${endDate}"`,
-                    requestKey: null 
-                });
-                
-                // 🌟 如果沒有紀錄，在這裡提前結束也沒關係了，因為我們上面已經把 UI 處理好了！
-                if (records.length === 0) {
-                    chartContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; background: rgba(0,0,0,0.01); border-radius: 12px; margin-top: 20px;">${month} 月份還沒有練習紀錄喔。<br>每一次的開始都不嫌晚！</div>`;
-                    return;
-                }
-
-                // 統計分組
-                const statsMap = {};
-                records.forEach(record => {
-                    const title = record.cardTitle || '未知練習';
-                    statsMap[title] = (statsMap[title] || 0) + 1;
-                });
-
-                const rawStats = Object.keys(statsMap).map(title => ({
-                    cardTitle: title, count: statsMap[title]
-                })).sort((a, b) => b.count - a.count);
-
-                const totalCount = records.length;
-                const maxCount = rawStats[0].count;
-
-                // 更新左邊的數字
-                totalCountEl.innerText = totalCount;
-
-                // 🌟 修正點 2：只有在「本月」且「有資料」時，才計算本週次數
-                if (year === now.getFullYear() && month === now.getMonth() + 1) {
-                    const today = new Date();
-                    const dayOfWeek = today.getDay() || 7; 
-                    today.setHours(0, 0, 0, 0);
-                    const thisMonday = new Date(today);
-                    thisMonday.setDate(today.getDate() - dayOfWeek + 1);
-                    
-                    const weeklyCount = records.filter(r => new Date(r.created.replace(' ', 'T')) >= thisMonday).length;
-                    weeklyCountEl.innerText = weeklyCount;
-                }
-
-                // 畫出圖表
-                let chartHTML = '';
-                rawStats.forEach(stat => {
-                    const percentage = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
-                    chartHTML += `
-                        <div style="margin-bottom: 18px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">${stat.cardTitle}</div>
-                                <div style="font-size: 0.9rem; font-weight: bold; color: var(--onene-purple);">${stat.count} 次</div>
-                            </div>
-                            <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.04); border-radius: 5px; overflow: hidden;">
-                                <div style="height: 100%; width: 0; background: var(--onene-purple); border-radius: 5px; transition: width 0.6s ease-out;" class="stats-bar" data-width="${percentage}%"></div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                totalCountEl.innerText = totalCount;
-                chartContainer.innerHTML = chartHTML;
-
-                setTimeout(() => {
-                    document.querySelectorAll('.stats-bar').forEach(bar => { bar.style.width = bar.dataset.width; });
-                }, 100);
-
-            } catch (err) {
-                console.error("無法讀取統計資料", err);
-                chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--onene-red);">目前無法連線到資料庫，請檢查網路設定。</div>';
-            }
+        const chartContainer = document.getElementById('stats-chart-container');
+        const totalCountEl = document.getElementById('stats-total-count');
+        const monthLabel = document.getElementById('stats-current-month');
+        const nextBtn = document.getElementById('stats-next-month');
+        
+        monthLabel.innerText = `${year} 年 ${month} 月`;
+        const now = new Date();
+        if (year === now.getFullYear() && month === now.getMonth() + 1) {
+            nextBtn.style.opacity = '0.2'; nextBtn.style.pointerEvents = 'none';
+        } else {
+            nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto';
         }
 
-        // 綁定「打開視窗」按鈕
+        // 檢查是否有快取
+        if (statsCache[cacheKey]) {
+            console.log(`[Cache] 讀取 ${cacheKey} 的快取數據`);
+            renderStatsUI(statsCache[cacheKey], year, month);
+            return;
+        }
+
+        chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">能量讀取中...</div>';
+        totalCountEl.innerText = '0';
+
+        try {
+            const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString().replace('T', ' ');
+            const endDate = new Date(Date.UTC(year, month, 1)).toISOString().replace('T', ' ');
+
+            const records = await pb.collection('practice_logs').getFullList({
+                filter: `user = "${pb.authStore.model.id}" && created >= "${startDate}" && created < "${endDate}"`,
+                fields: 'cardTitle,created', 
+                requestKey: 'monthly-stats-fetch'
+            });
+            
+            // 存入快取
+            statsCache[cacheKey] = records;
+            renderStatsUI(records, year, month);
+
+        } catch (err) {
+            if (err.isAbort) return;
+            console.error("無法讀取統計資料", err);
+            chartContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--onene-red);">目前無法連線到資料庫。</div>';
+        }
+    }
+
+    // 🚀 UI 渲染函數 (放在 initAuth 內部)
+    function renderStatsUI(records, year, month) {
+        const chartContainer = document.getElementById('stats-chart-container');
+        const totalCountEl = document.getElementById('stats-total-count');
+        const weeklyBlock = document.getElementById('weekly-stats-block');
+        const weeklyCountEl = document.getElementById('stats-weekly-count');
+
+        const now = new Date();
+        if (year === now.getFullYear() && month === now.getMonth() + 1) {
+            weeklyBlock.style.display = 'block';
+            const today = new Date();
+            const dayOfWeek = today.getDay() || 7; 
+            today.setHours(0, 0, 0, 0);
+            const thisMonday = new Date(today);
+            thisMonday.setDate(today.getDate() - dayOfWeek + 1);
+            weeklyCountEl.innerText = records.filter(r => new Date(r.created.replace(' ', 'T')) >= thisMonday).length;
+        } else {
+            weeklyBlock.style.display = 'none';
+        }
+
+        if (records.length === 0) {
+            chartContainer.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem;">${month} 月份還沒有練習紀錄。</div>`;
+            totalCountEl.innerText = '0';
+            return;
+        }
+
+        const statsMap = {};
+        records.forEach(record => {
+            const title = record.cardTitle || '未知練習';
+            statsMap[title] = (statsMap[title] || 0) + 1;
+        });
+
+        const rawStats = Object.keys(statsMap).map(title => ({
+            cardTitle: title, count: statsMap[title]
+        })).sort((a, b) => b.count - a.count);
+
+        totalCountEl.innerText = records.length;
+        const maxCount = rawStats[0].count;
+
+        let chartHTML = '';
+        rawStats.forEach(stat => {
+            const percentage = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
+            chartHTML += `
+                <div style="margin-bottom: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);">${stat.cardTitle}</div>
+                        <div style="font-size: 0.9rem; font-weight: bold; color: var(--onene-purple);">${stat.count} 次</div>
+                    </div>
+                    <div style="width: 100%; height: 10px; background: rgba(0,0,0,0.04); border-radius: 5px; overflow: hidden;">
+                        <div style="height: 100%; width: 0; background: var(--onene-purple); border-radius: 5px; transition: width 0.6s ease-out;" class="stats-bar" data-width="${percentage}%"></div>
+                    </div>
+                </div>`;
+        });
+        chartContainer.innerHTML = chartHTML;
+        setTimeout(() => { document.querySelectorAll('.stats-bar').forEach(bar => { bar.style.width = bar.dataset.width; }); }, 100);
+    }
+
+    if (viewStatsBtn) {
         viewStatsBtn.addEventListener('click', () => {
-            if (!pb || !pb.authStore.isValid) return;
+            if (!pb || !pb.authStore.isValid) {
+                document.getElementById('tab-login').click(); 
+                openModal('auth-modal');
+                return;
+            }
             openModal('stats-modal');
-            currentReportDate = new Date(); // 每次打開都預設看「這個月」
+            currentReportDate = new Date(); 
             loadMonthlyStats(currentReportDate);
         });
 
-        // 綁定「上個月」按鈕
         document.getElementById('stats-prev-month').addEventListener('click', () => {
             currentReportDate.setMonth(currentReportDate.getMonth() - 1);
             loadMonthlyStats(currentReportDate);
         });
 
-        // 綁定「下個月」按鈕
         document.getElementById('stats-next-month').addEventListener('click', () => {
             const now = new Date();
-            // 防止看到未來的月份
             if (currentReportDate.getFullYear() === now.getFullYear() && currentReportDate.getMonth() === now.getMonth()) return;
-            
             currentReportDate.setMonth(currentReportDate.getMonth() + 1);
             loadMonthlyStats(currentReportDate);
         });
     }
 
-    // 從雲端下載資料並套用的函數
     function syncDataFromDB() {
         const user = pb.authStore.model;
         if (!user) return;
@@ -1095,17 +1054,14 @@ function initAuth() {
         }
 
         if (user.starCount !== undefined && user.starCount !== null) {
-                // 後端給多少顆，前端就直接畫多少顆
                 let count = user.starCount;
                 localStorage.setItem('oneneStarCount', count);
-                
-                stars = []; // 先清空畫面
+                stars = []; 
                 for(let i = 0; i < count; i++) {
-                    addStar(false); // 畫出星星 (false 代表純畫圖，不要觸發 API)
+                    addStar(false); 
                 }
         }
 
-        // 🚀 新增：同步三項設定開關
         if (user.soundEnabled !== undefined && user.soundEnabled !== null) {
             localStorage.setItem('oneneSoundEnabled', user.soundEnabled);
             document.getElementById('toggle-sound').checked = user.soundEnabled;
@@ -1118,35 +1074,23 @@ function initAuth() {
             localStorage.setItem('oneneFullscreenDefault', user.fsDefault);
             document.getElementById('toggle-fullscreen-default').checked = user.fsDefault;
         }
-    
     }
 
-    // 檢查登入狀態與畫面切換
     function checkLoginStatus() {
         if (pb.authStore.isValid) {
-            // 如果是 Google 登入，可能沒有密碼，我們抓信箱前綴當暱稱
             const email = pb.authStore.model.email || '';
             const nickname = email ? email.split('@')[0] : '能量使者';
             
             userStatus.innerText = `能量使者：${nickname}`;
-            loginBtn.style.display = 'none';
-            if(googleLoginBtn) googleLoginBtn.style.display = 'none'; 
-            logoutBtn.style.display = 'flex';
-            if(viewStatsBtn) viewStatsBtn.style.display = 'block'; // 🌟 登入後顯示統計按鈕
+            if(logoutBtn) logoutBtn.style.display = 'flex';
             syncDataFromDB();
         } else {
             userStatus.innerText = '尚未登入';
-            loginBtn.style.display = 'block';
-            if(googleLoginBtn) googleLoginBtn.style.display = 'flex'; 
-            logoutBtn.style.display = 'none';
-            if(viewStatsBtn) viewStatsBtn.style.display = 'none'; // 🌟 未登入隱藏
+            if(logoutBtn) logoutBtn.style.display = 'none';
         }
     }
 
-    // ==========================================
-    // 全新：自訂登入 / 註冊表單邏輯 (含密碼確認)
-    // ==========================================
-    let isLoginMode = true; // 預設為登入模式
+    let isLoginMode = true; 
     const authModal = document.getElementById('auth-modal');
     const tabLogin = document.getElementById('tab-login');
     const tabRegister = document.getElementById('tab-register');
@@ -1154,12 +1098,10 @@ function initAuth() {
     const authSubmitBtn = document.getElementById('auth-submit-btn');
     const emailInput = document.getElementById('auth-email');
     const passwordInput = document.getElementById('auth-password');
-    // 🌟 新抓取確認密碼的元素
     const confirmGroup = document.getElementById('auth-confirm-group');
     const passwordConfirmInput = document.getElementById('auth-password-confirm');
     const errorMsg = document.getElementById('auth-error-msg');
 
-    // 切換到「登入」標籤
     tabLogin.addEventListener('click', () => {
         isLoginMode = true;
         tabLogin.style.background = 'var(--onene-yellow)'; tabLogin.style.color = '#fff';
@@ -1167,10 +1109,9 @@ function initAuth() {
         authTitle.innerText = '會員登入';
         authSubmitBtn.innerText = '確認登入';
         errorMsg.style.display = 'none';
-        confirmGroup.style.display = 'none'; // 登入時隱藏確認密碼
+        confirmGroup.style.display = 'none'; 
     });
 
-    // 切換到「註冊」標籤
     tabRegister.addEventListener('click', () => {
         isLoginMode = false;
         tabRegister.style.background = 'var(--onene-yellow)'; tabRegister.style.color = '#fff';
@@ -1178,24 +1119,13 @@ function initAuth() {
         authTitle.innerText = '註冊新帳號';
         authSubmitBtn.innerText = '確認註冊';
         errorMsg.style.display = 'none';
-        confirmGroup.style.display = 'block'; // 註冊時顯示確認密碼
+        confirmGroup.style.display = 'block'; 
     });
 
-    // 側邊欄的按鈕：打開自訂表單
-    loginBtn.addEventListener('click', () => {
-        emailInput.value = ''; 
-        passwordInput.value = '';
-        passwordConfirmInput.value = ''; // 清空確認密碼
-        errorMsg.style.display = 'none';
-        tabLogin.click(); // 預設先跳到登入頁
-        openModal('auth-modal'); 
-    });
-
-    // 送出表單按鈕
     authSubmitBtn.addEventListener('click', async () => {
         const email = emailInput.value.trim();
         const password = passwordInput.value;
-        const passwordConfirm = passwordConfirmInput.value; // 取得確認密碼
+        const passwordConfirm = passwordConfirmInput.value; 
         errorMsg.style.display = 'none';
 
         if (!email || !password) {
@@ -1204,7 +1134,6 @@ function initAuth() {
             return;
         }
 
-        // 🌟 針對註冊模式的防呆檢查
         if (!isLoginMode) {
             if (password.length < 8) {
                 errorMsg.innerText = '註冊密碼至少需要 8 個字元喔！';
@@ -1223,17 +1152,15 @@ function initAuth() {
 
         try {
             if (isLoginMode) {
-                // 執行登入
                 await pb.collection('users').authWithPassword(email, password);
                 alert('登入成功！歡迎回來補充能量。');
                 closeModal('auth-modal');
                 checkLoginStatus();
             } else {
-                // 執行註冊 (將確認密碼一併傳給 PocketBase)
                 await pb.collection('users').create({
                     email: email,
                     password: password,
-                    passwordConfirm: passwordConfirm, // 🌟 這裡改成真實的第二次輸入
+                    passwordConfirm: passwordConfirm, 
                     theme: localStorage.getItem('oneneSavedTheme') || 'default',
                     themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
                     starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),
@@ -1242,7 +1169,6 @@ function initAuth() {
                     vibEnabled: document.getElementById('toggle-vibration').checked,
                     fsDefault: document.getElementById('toggle-fullscreen-default').checked
                 });
-                // 註冊完直接幫他登入
                 await pb.collection('users').authWithPassword(email, password);
                 alert('註冊成功！已經為您建立專屬帳號並備份當前進度。');
                 closeModal('auth-modal');
@@ -1259,17 +1185,16 @@ function initAuth() {
         }
     });
 
-    // Google 登入按鈕 - 終極穩定版
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
             try {
-                // 執行登入，PocketBase 會自動處理彈窗
                 await pb.collection('users').authWithOAuth2({ 
                     provider: 'google' 
                 });
                 
                 alert('Google 登入成功！');
                 checkLoginStatus();
+                window.location.reload();
             } catch (err) {
                 console.error("詳細錯誤內容：", err);
                 alert('登入失敗。請稍後再試，或聯絡開發者確認後台設定。');
@@ -1277,17 +1202,17 @@ function initAuth() {
         });
     }
 
-    // 登出按鈕
-    logoutBtn.addEventListener('click', () => {
-        pb.authStore.clear(); 
-        localStorage.removeItem('oneneStarCount');
-        localStorage.removeItem('oneneSavedTheme');
-        localStorage.removeItem('oneneSavedThemeIcon');
-        alert('已登出，期待您下次再來！');
-        window.location.reload(); 
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            pb.authStore.clear(); 
+            localStorage.removeItem('oneneStarCount');
+            localStorage.removeItem('oneneSavedTheme');
+            localStorage.removeItem('oneneSavedThemeIcon');
+            alert('已登出，期待您下次再來！');
+            window.location.reload(); 
+        });
+    }
 
-    // 初始化檢查
     checkLoginStatus();
 }
 
@@ -1295,15 +1220,11 @@ document.addEventListener("DOMContentLoaded", () => {
     loadSettings();
     initCanvas(); pourStars(); animateStars();
     
-    // 初始化 App，並把它存到 window 變數中，讓抓字函數可以呼叫它來更新畫面
     const app = new App(SITE_DATA); 
     window.appInstance = app; 
     app.init();
     
-    // 啟動會員系統
     initAuth();
-    
-    // 🚀 網頁一打開，立刻派機器人去後端抓最新的字庫
     fetchDynamicContent();
 });
 </script>

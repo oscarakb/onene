@@ -127,11 +127,80 @@ class MindCleanController extends BaseCardController {
 }
 
 class AnswerBookController extends BaseCardController {
-    start() { if(this.isActive) return; this.isActive = true; this.applyFullscreenSetting(); this.el.classList.add('pop-active'); this.renderPrompt(); }
-    handleAction(action, target) { super.handleAction(action, target); if (action === 'reveal-answer-ritual') { this.showRitual(); } if (action === 'restart-answer') { this.renderPrompt(); } }
-    renderPrompt() { this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-lg tracking-wide mb-10">默念問題 3 次</div><div data-action="reveal-answer-ritual" class="cursor-pointer"><span class="material-symbols-rounded icon-xxl pointer-none">menu_book</span><div class="text-xs opacity-80 pointer-none mt-10">點擊書本獲得答案</div></div></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); }
-    showRitual() { this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-lg tracking-wider opacity-90 font-normal">翻閱命運中...</div><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>`; this.syncHeight(); setTimeout(() => this.reveal(), 1800); }
-    reveal() { const answer = ANSWERS_LIBRARY[Math.floor(Math.random() * ANSWERS_LIBRARY.length)]; this.el.innerHTML = this.getSharedUI() + `<div class="card-body-result"><div class="text-sm opacity-70 tracking-wide mb-5">解答</div><div class="text-xl mb-25 line-height-lg">「 ${answer} 」</div><div data-action="restart-answer" class="btn-outline">↻ 再算一次</div></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`; this.syncHeight(); triggerStarReward(this.data.id, this.data.title); }
+    constructor(el, data, onClose) {
+        super(el, data, onClose);
+        this.lastStarTime = 0; // 🚀 紀錄上一次掉落星星的時間點
+    }
+
+    start() { 
+        if(this.isActive) return; 
+        this.isActive = true; 
+        this.applyFullscreenSetting(); 
+        this.el.classList.add('pop-active'); 
+        this.renderPrompt(); 
+    }
+
+    handleAction(action, target) { 
+        super.handleAction(action, target); 
+        if (action === 'reveal-answer-ritual') { this.showRitual(); } 
+        if (action === 'restart-answer') { this.renderPrompt(); } 
+    }
+
+    renderPrompt() { 
+        this.el.innerHTML = this.getSharedUI() + `
+            <div class="card-body-result">
+                <div class="text-lg tracking-wide mb-10">默念問題 3 次</div>
+                <div data-action="reveal-answer-ritual" class="cursor-pointer">
+                    <span class="material-symbols-rounded icon-xxl pointer-none">menu_book</span>
+                    <div class="text-xs opacity-80 pointer-none mt-10">點擊書本獲得答案</div>
+                </div>
+            </div>
+            <div data-action="close-card" class="action-close">✕ 結束練習</div>
+        `; 
+        this.syncHeight(); 
+    }
+
+    showRitual() { 
+        this.el.innerHTML = this.getSharedUI() + `
+            <div class="card-body-result">
+                <div class="text-lg tracking-wider opacity-90 font-normal">翻閱命運中...</div>
+                <div class="loading-dots">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                </div>
+            </div>`; 
+        this.syncHeight(); 
+        setTimeout(() => this.reveal(), 1800); 
+    }
+
+    reveal() { 
+        const answer = ANSWERS_LIBRARY[Math.floor(Math.random() * ANSWERS_LIBRARY.length)]; 
+        const now = Date.now();
+        const cooldown = 180000; // 3 分鐘 = 180,000 毫秒
+        const canGetStar = (now - this.lastStarTime) > cooldown;
+
+        this.el.innerHTML = this.getSharedUI() + `
+            <div class="card-body-result">
+                <div class="text-sm opacity-70 tracking-wide mb-5">解答</div>
+                <div class="text-xl mb-15 line-height-lg">「 ${answer} 」</div>
+                
+                ${!canGetStar ? `<div class="text-xs opacity-50 mb-20">能量正在冷卻中，請靜心感受文字...</div>` : ''}
+                
+                <div data-action="restart-answer" class="btn-outline">↻ 再算一次</div>
+            </div>
+            <div data-action="close-card" class="action-close">✕ 結束練習</div>
+        `; 
+        this.syncHeight(); 
+
+        // 🚀 只有超過冷卻時間才會觸發星星與資料庫紀錄
+        if (canGetStar) {
+            triggerStarReward(this.data.id, this.data.title);
+            this.lastStarTime = now; 
+        } else {
+            console.log("答案之書：冷卻中，本次不發放星星。");
+        }
+    }
 }
 
 class MoodController extends BaseCardController {
