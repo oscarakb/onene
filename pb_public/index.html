@@ -12,10 +12,13 @@
         :root {
             /* 預設原版配色 - 溫暖鵝黃夜燈主題 */
             --onene-red: #d35446; 
+            --onene-orange: #e67e22;
             --onene-yellow: #d99a00; 
-            --onene-blue: #4a82df;
-            --onene-purple: #8e51aa;
             --onene-green: #208b7e;
+            --onene-blue: #4a82df;
+            --onene-navy: #2c4463;
+            --onene-indigo: #5c6bc0;
+            --onene-purple: #8e51aa;
             --onene-pink: #e36b89;
             --onene-peace: linear-gradient(-45deg, #ffb347, #ffcc33, #f5d76e, #f8ca00); 
             
@@ -30,9 +33,8 @@
 
         /* --- 主題配色變數 --- */
         html[data-theme="dark"] {
-            /* 無色彩的灰階沉浸設計 */
-            --onene-red: #555555; --onene-yellow: #666666; --onene-blue: #444444;
-            --onene-purple: #3a3a3a; --onene-green: #4f4f4f; --onene-pink: #5c5c5c;
+            --onene-red: #555555; --onene-orange: #5d5d5d; --onene-yellow: #666666; --onene-blue: #444444;
+            --onene-indigo: #4a4e69; --onene-navy: #333d47; --onene-purple: #3a3a3a; --onene-green: #4f4f4f; --onene-pink: #5c5c5c;
             --onene-peace: linear-gradient(-45deg, #2a2a2a, #3a3a3a, #1a1a1a, #222222); 
             --bg-light: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; --text-muted: #888888;
             --border-color: #2c2c2e; --shadow-soft: 0 10px 40px rgba(0,0,0,0.6);
@@ -44,8 +46,8 @@
         html[data-theme="dark"] .bubble.is-popped { background: rgba(255, 255, 255, 0.05); }
 
         html[data-theme="morandi"] {
-            --onene-red: #b36b63; --onene-yellow: #a8834a; --onene-blue: #637f9e;
-            --onene-purple: #857591; --onene-green: #6c8477; --onene-pink: #b07c8e;
+            --onene-red: #b36b63; --onene-orange: #bd8b6a; --onene-yellow: #a8834a; --onene-blue: #637f9e;
+            --onene-indigo: #67728f; --onene-navy: #485b6e; --onene-purple: #857591; --onene-green: #6c8477; --onene-pink: #b07c8e;
             --onene-peace: linear-gradient(-45deg, #b36b63, #857591, #637f9e, #6c8477); 
             --bg-light: #e2e6e6; --card-bg: #edf1f1;
             --text-main: #4a4a4a; --border-color: #d1d6d6;
@@ -54,8 +56,8 @@
         html[data-theme="morandi"] .brand-card .brand-ch, html[data-theme="morandi"] .brand-card .motto { color: #ffffff; }
 
         html[data-theme="adhd"] {
-            --onene-red: #a8653f; --onene-yellow: #9c7b30; --onene-blue: #527367;
-            --onene-purple: #6d6053; --onene-green: #546b58; --onene-pink: #8c605c;
+            --onene-red: #a8653f; --onene-orange: #a67449; --onene-yellow: #9c7b30; --onene-blue: #527367;
+            --onene-indigo: #54607a; --onene-navy: #384c57; --onene-purple: #6d6053; --onene-green: #546b58; --onene-pink: #8c605c;
             --onene-peace: linear-gradient(-45deg, #527367, #546b58, #6d6053, #9c7b30); 
             --bg-light: #dde3db; --card-bg: #e8ece6;
             --text-main: #2f3e46; --border-color: #c9d1c7;
@@ -64,8 +66,8 @@
         html[data-theme="adhd"] .brand-card .brand-ch, html[data-theme="adhd"] .brand-card .motto { color: #ffffff; }
 
         html[data-theme="hsp"] {
-            --onene-red: #9e7d9e; --onene-yellow: #9c876b; --onene-blue: #6d84a3;
-            --onene-purple: #847996; --onene-green: #738a7f; --onene-pink: #a1818e;
+            --onene-red: #9e7d9e; --onene-orange: #ad877d; --onene-yellow: #9c876b; --onene-blue: #6d84a3;
+            --onene-indigo: #757b99; --onene-navy: #586478; --onene-purple: #847996; --onene-green: #738a7f; --onene-pink: #a1818e;
             --onene-peace: linear-gradient(-45deg, #847996, #9e7d9e, #6d84a3, #738a7f); 
             --bg-light: #e5e1eb; --card-bg: #eeeaf2;
             --text-main: #5c5470; --border-color: #d1cdd9;
@@ -145,12 +147,15 @@
         .card-icon { width: 24px; height: 24px; font-size: 24px; }
 
         .card.filled { color: #fff; opacity: 0.98; }
-        .card.filled.purple { background-color: var(--onene-purple); }
         .card.filled.red { background-color: var(--onene-red); }
-        .card.filled.blue { background-color: var(--onene-blue); }
-        .card.filled.green { background-color: var(--onene-green); }
-        .card.filled.pink { background-color: var(--onene-pink); }
+        .card.filled.orange { background-color: var(--onene-orange); }
         .card.filled.yellow { background-color: var(--onene-yellow); }
+        .card.filled.green { background-color: var(--onene-green); }
+        .card.filled.blue { background-color: var(--onene-blue); }
+        .card.filled.pink { background-color: var(--onene-pink); }
+        .card.filled.indigo { background-color: var(--onene-indigo); }
+        .card.filled.navy { background-color: var(--onene-navy); }
+        .card.filled.purple { background-color: var(--onene-purple); }
 
         .grid-container .card.pop-active, 
         .grid-container .card.balanced-state, 
@@ -334,7 +339,8 @@
             
             <div class="brand-content-wrapper" id="reset-target" 
                  onmousedown="startStarTimer()" onmouseup="clearStarTimer()" 
-                 ontouchstart="startStarTimer()" ontouchend="clearStarTimer()">
+                 ontouchstart="startStarTimer()" ontouchend="clearStarTimer()"
+                 onclick="handleBrandClick()">
                 <img src="https://i.ibb.co/Z62svXTY/9.jpg" alt="Logo" class="logo-img">
                 <h1 class="brand-ch">昂昂向上</h1>
                 <span class="motto">STAY PURE · STAY BRAVE</span>
@@ -693,6 +699,46 @@ function startStarTimer() {
 
 function clearStarTimer() { clearTimeout(longPressTimer); }
 window.addEventListener('resize', initCanvas);
+
+// ==========================================
+// 星星彩蛋：連續點擊彈跳邏輯
+// ==========================================
+let brandClickCount = 0;
+let brandClickTimer = null;
+
+function handleBrandClick() {
+    brandClickCount++;
+    
+    // 每次點擊就重置計時器
+    clearTimeout(brandClickTimer);
+    
+    // 如果點擊次數達到 10 次，觸發星星彈跳
+    if (brandClickCount >= 10) {
+        bounceAllStars();
+        brandClickCount = 0; // 觸發後歸零
+    } else {
+        // 如果超過 400 毫秒沒有連續點擊，則重新計算
+        brandClickTimer = setTimeout(() => {
+            brandClickCount = 0;
+        }, 400); 
+    }
+}
+
+function bounceAllStars() {
+    stars.forEach(star => {
+        // 給予強烈的隨機向上速度 (負值代表向上)
+        star.vy = -12 - Math.random() * 8; 
+        // 給予一點水平推力讓星星散開
+        star.vx = (Math.random() - 0.5) * 12; 
+        // 將睡眠狀態解除，重新啟動物理演算
+        star.isSleeping = false; 
+    });
+    
+    // 如果裝置支援且使用者有開啟震動，給予小小的回饋感
+    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && navigator.vibrate) {
+        navigator.vibrate([30, 40, 30]);
+    }
+}
 
 // ==========================================
 // 1. Data & Library
