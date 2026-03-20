@@ -163,7 +163,7 @@ class AnswerBookController extends BaseCardController {
     showRitual() { 
         this.el.innerHTML = this.getSharedUI() + `
             <div class="card-body-result">
-                <div class="text-lg tracking-wider opacity-90 font-normal">正在連接宇宙能量...</div>
+                <div class="text-lg tracking-wider opacity-90 font-normal">連接宇宙能量中...</div>
                 <div class="loading-dots">
                     <div class="loading-dot"></div>
                     <div class="loading-dot"></div>
