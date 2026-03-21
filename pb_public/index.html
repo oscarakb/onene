@@ -392,7 +392,14 @@
             flex-direction: column;
             align-items: center;
         }
-
+        /* --- 誇誇包專屬動畫 --- */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes soundRipple { 0% { transform: scale(0.5); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+        .wave-ring {
+            position: absolute; width: 100px; height: 100px; top: 0; left: 0;
+            border: 2px solid rgba(255, 154, 158, 0.6); border-radius: 50%;
+            animation: soundRipple 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+        }
         .mood-action-btn:active {
             transform: scale(0.94);
             background: var(--bg-light);
@@ -403,6 +410,47 @@
             margin-bottom: 4px;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
         }
+        /* 定義流動柔光的動畫 */
+        @keyframes heartGlowFlow {
+        0%, 100% {
+            /* 強制開啟 GPU 硬體加速 */
+            transform: scale(0.8) translateZ(0);
+            opacity: 0.15;
+        }
+        50% {
+            transform: scale(2.2) translateZ(0);
+            opacity: 0.55;
+        }
+    }
+
+    .heart-glow-bg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 70px; /* 初始直徑與答案之書一致 */
+        height: 70px;
+        margin-top: -35px; /* 精準置中 */
+        margin-left: -35px;
+        border-radius: 50%;
+        z-index: -1;
+        
+        /* 使用與答案之書相同的徑向漸層結構，但保留誇誇包的粉色調 */
+        background: radial-gradient(circle, rgba(255,182,193,0.8) 0%, rgba(255,154,158,0.3) 50%, transparent 70%);
+        
+        /* 套用 8 秒呼吸動畫 */
+        animation: heartGlowFlow 8s ease-in-out infinite;
+        pointer-events: none;
+        
+        /* 效能優化 */
+        will-change: transform, opacity;
+        mix-blend-mode: normal; /* 回歸正常混合模式以獲得純淨光感 */
+    }
+
+    /* 深色模式下的微調 */
+    html[data-theme="dark"] .heart-glow-bg {
+        background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,154,158,0.2) 50%, transparent 70%);
+        opacity: 0.4;
+    }
         /* ================= 設定按鈕與 Modal 樣式 ================= */
         .settings-btn-capsule {
             position: absolute; top: 15px; left: 15px; width: 40px; height: 40px;
@@ -515,9 +563,9 @@
                 <span class="tool-label">心情打卡</span>
             </div>
 
-            <div class="tool-btn noise" onclick="toggleWhiteNoise()">
-                <span class="material-symbols-rounded tool-icon">headphones</span>
-                <span class="tool-label">白噪音</span>
+            <div class="tool-btn praise" onclick="openModal('praise-modal')">
+            <span class="material-symbols-rounded tool-icon" style="color: #ff9a9e;">favorite</span>
+            <span class="tool-label">誇誇包</span>
             </div>
 
             <a href="https://instagram.com/your_account" target="_blank" class="tool-btn ig">
@@ -837,7 +885,32 @@
     </div>
     <div class="ios-pwa-arrow"></div>
 </div>
-
+<div id="praise-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closePraiseModal()">
+            <span class="material-symbols-rounded">close</span>
+        </div>
+        <div class="txt-h2 tc-main mt-10">專屬誇誇包</div>
+    </div>
+    <div class="modal-body text-center" id="praise-modal-body">
+    <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;">
+        
+        <div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 100px; margin-bottom: 120px; isolation: isolate;">
+            
+            <div class="heart-glow-bg"></div>
+            
+            <span class="material-symbols-rounded" style="color: #ff9a9e; font-size: 80px; animation: float 3s ease-in-out infinite; position: relative; z-index: 1;">favorite</span>
+        </div>
+        
+        <div class="txt-body-lg tc-muted line-height-lg w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center;">
+            覺得累了嗎？<br>點開它，聽聽我想對你說的話。
+        </div>
+        
+        <div style="width: 100%; text-align: center; padding-bottom: 20px;">
+            <button class="start-btn" onclick="playPraise()" style="background: #ff9a9e; color: #fff; border: none; padding: 12px 30px; border-radius: 30px; font-size: 1rem; min-width: 130px;">點擊聽聽</button>
+        </div>
+    </div>
+</div>
 <script>
 // ==========================================
 // Theme Switcher Logic
@@ -1203,43 +1276,97 @@ async function saveSettings() {
 const pb = new PocketBase('https://onene.up.railway.app');
 
 // ==========================================
-// 白噪音播放邏輯 (White Noise Logic)
+// 誇誇包邏輯 (Praise Modal Logic)
 // ==========================================
-// 這裡暫時使用一個開源的雨聲作為範例，上線時建議換成你掛載在 PocketBase 上的音檔
-const NOISE_URL = 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_82472b53bd.mp3?filename=rain-and-thunder-16705.mp3';
-let noiseAudio = new Audio(NOISE_URL);
-noiseAudio.loop = true; // 循環播放
-let isNoisePlaying = false;
+const PRAISES_LIBRARY = [
+    "寶寶，你今天好棒！",
+    "辛苦了，你已經做得很好了喔！",
+    "深呼吸，宇宙都在為你加油！",
+    "慢慢來，不用急，你擁有屬於自己的時區。",
+    "哪怕只前進了一小步，也是很棒的進步！",
+    "今天也要好好照顧自己喔！"
+];
+let isPraiseSpeaking = false;
 
-function toggleWhiteNoise() {
-    const noiseBtn = document.querySelector('.tool-btn.noise');
-    const icon = noiseBtn.querySelector('.tool-icon');
+function playPraise() {
+    if (isPraiseSpeaking) return;
+    const text = PRAISES_LIBRARY[Math.floor(Math.random() * PRAISES_LIBRARY.length)];
+    isPraiseSpeaking = true;
 
-    if (isNoisePlaying) {
-        noiseAudio.pause();
-        isNoisePlaying = false;
-        icon.innerText = 'headphones';
-        noiseBtn.style.background = 'var(--card-bg)';
-        noiseBtn.style.color = 'var(--text-main)';
-    } else {
-        // 加上一點漸進式音量，才不會嚇到人（正念科技細節）
-        noiseAudio.volume = 0;
-        noiseAudio.play().then(() => {
-            let vol = 0;
-            let fade = setInterval(() => {
-                if (vol < 0.8) { vol += 0.05; noiseAudio.volume = vol; } 
-                else { clearInterval(fade); }
-            }, 100);
+    // 替換畫面為播放中狀態
+    const bodyEl = document.getElementById('praise-modal-body');
+    bodyEl.innerHTML = `
+        <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; width: 100%; box-sizing: border-box; text-align: center;">
             
-            isNoisePlaying = true;
-            icon.innerText = 'graphic_eq'; // 換成音軌 icon
-            noiseBtn.style.background = 'var(--onene-peace)'; // 套用平靜能量漸層
-            noiseBtn.style.color = '#fff'; // 讓漸層上的字變白色
-        }).catch(e => {
-            console.log("播放失敗，需使用者先互動才能播放音訊", e);
-            alert("請先在畫面上隨意點擊一下，才能解鎖音效播放喔！");
-        });
+            <div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 100px; margin-bottom: 120px;">
+                
+                <div class="sound-wave-wrapper" style="position: absolute; top: 0; left: 0; width: 100px; height: 100px; z-index: 1; display: flex; align-items: center; justify-content: center;">
+                    <div class="wave-ring" style="animation-delay: 0s;"></div>
+                    <div class="wave-ring" style="animation-delay: 0.5s;"></div>
+                    <div class="wave-ring" style="animation-delay: 1s;"></div>
+                </div>
+                
+                <span class="material-symbols-rounded" style="color: #ff9a9e; position: relative; z-index: 2; font-size: 45px; filter: drop-shadow(0 2px 5px rgba(255,154,158,0.2));">record_voice_over</span>
+            </div>
+            
+            <div class="txt-h2 tc-main line-height-lg tracking-wider text-center w-100" style="position: relative; z-index: 2; padding: 0 20px; box-sizing: border-box; font-size: 1.25rem; margin-bottom: 35px;">
+                「${text}」
+            </div>
+            
+            <div style="position: relative; z-index: 2; width: 100%; text-align: center; padding-bottom: 20px;">
+                <button class="start-btn" onclick="playPraise()" style="background: rgba(255,154,158,0.1); color: #ff9a9e; border: 1px solid rgba(255,154,158,0.2); padding: 8px 24px; border-radius: 20px; font-size: 0.85rem; opacity: 0; animation: fadeIn 0.5s 2s forwards; min-width: 130px; cursor: pointer;">↻ 再來一句</button>
+            </div>
+        </div>
+    `;
+
+    // 呼叫語音合成
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); 
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        utterance.rate = 0.85; 
+        utterance.pitch = 1.2; 
+        
+        utterance.onend = () => {
+            isPraiseSpeaking = false;
+            const waves = bodyEl.querySelectorAll('.wave-ring');
+            waves.forEach(w => w.style.animation = 'none'); // 唸完停止動畫
+        };
+        utterance.onerror = () => { isPraiseSpeaking = false; };
+        
+        window.speechSynthesis.speak(utterance);
+    } else {
+        isPraiseSpeaking = false;
     }
+
+    // 發放微療癒星星獎勵
+    addStar(true);
+    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+    }
+}
+
+function closePraiseModal() {
+    closeModal('praise-modal');
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    isPraiseSpeaking = false;
+    
+    setTimeout(() => {
+        document.getElementById('praise-modal-body').innerHTML = `
+            <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;">
+                <div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 100px; margin-bottom: 120px; isolation: isolate;">
+                    <div class="heart-glow-bg"></div>
+                    <span class="material-symbols-rounded" style="color: #ff9a9e; font-size: 80px; animation: float 3s ease-in-out infinite; position: relative; z-index: 1;">favorite</span>
+                </div>
+                <div class="txt-body-lg tc-muted line-height-lg w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center;">
+                    覺得累了嗎？<br>點開它，聽聽我想對你說的話。
+                </div>
+                <div style="width: 100%; text-align: center; padding-bottom: 20px;">
+                    <button class="start-btn" onclick="playPraise()" style="background: #ff9a9e; color: #fff; border: none; padding: 12px 30px; border-radius: 30px; font-size: 1rem; min-width: 130px;">點擊聽聽</button>
+                </div>
+            </div>
+        `;
+    }, 400);
 }
 
 // ==========================================
@@ -1336,23 +1463,46 @@ function installPWA() {
         alert('您的瀏覽器目前不支援自動安裝，請透過瀏覽器的「分享 / 設定」選單，手動選擇「加入主畫面」。');
     }
 }
-
+// 偵測並優化 PWA 顯示邏輯
+function adjustPwaUI() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
+    if (isStandalone) {
+        // 找出「加到桌面」按鈕並隱藏
+        const pwaBtn = document.querySelector('.tool-btn.pwa');
+        if (pwaBtn) {
+            pwaBtn.style.display = 'none';
+            console.log("昂昂偵測：已在 PWA 模式，隱藏安裝按鈕。");
+        }
+    }
+}
 document.addEventListener("DOMContentLoaded", () => {
-    // --- 新增這段：註冊 Service Worker ---
+    // --- 1. 註冊 Service Worker ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
             .then((reg) => console.log('Service Worker 註冊成功！'))
             .catch((err) => console.log('Service Worker 註冊失敗：', err));
     }
 
+    // --- 2. 監聽 PWA 安裝完成事件 ---
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('昂昂向上：感謝安裝！');
+        localStorage.setItem('onenePwaInstalled', 'true');
+        
+        // 安裝完成後，立刻執行 UI 轉換（從安裝按鈕變為今日進度）
+        adjustPwaUI(); 
+    });
+
+    // --- 3. 原有的初始化程式碼 ---
     loadSettings();
     initCanvas(); pourStars(); animateStars();
     
-    const app = new App(SITE_DATA); 
-    window.appInstance = app; 
+    const app = new App(SITE_DATA);
+    window.appInstance = app;
     app.init();
     
     initAuth();
+    adjustPwaUI(); // 初始偵測
     fetchDynamicContent();
 });
 </script>
