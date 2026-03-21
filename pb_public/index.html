@@ -358,6 +358,25 @@
         @media (min-width: 1024px) { .container { max-width: 1100px; flex-direction: row; gap: 60px; padding-top: 60px; } .sidebar { width: 380px; position: sticky; top: 40px; } }
         footer { padding: 40px 0; text-align: center; font-size: 0.75rem; color: #ccc; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- iOS PWA 專屬安裝教學彈窗 --- */
+        .ios-pwa-popup {
+            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(150%);
+            width: 90%; max-width: 380px; background: var(--card-bg);
+            border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            z-index: 10001; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid var(--border-color); padding: 24px; text-align: center;
+        }
+        .ios-pwa-popup.is-active { transform: translateX(-50%) translateY(0); }
+        .ios-pwa-arrow {
+            position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%) rotate(45deg);
+            width: 16px; height: 16px; background: var(--card-bg);
+            border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
+        }
+        .ios-step-box {
+            background: rgba(0,0,0,0.03); border-radius: 12px; padding: 12px;
+            margin-top: 15px; text-align: left; display: flex; flex-direction: column; gap: 8px;
+        }
+        html[data-theme="dark"] .ios-step-box { background: rgba(255,255,255,0.05); }
         /* --- 心情打卡按鈕樣式 --- */
         .mood-action-btn {
             background: var(--card-bg);
@@ -799,6 +818,24 @@
             <button id="password-submit-btn" class="auth-submit-btn txt-body-lg tc-white mt-10">確認修改</button>
         </div>
     </div>
+</div>
+<div id="ios-pwa-prompt" class="ios-pwa-popup">
+    <div class="modal-close-btn" onclick="closeIosPrompt()" style="position: absolute; top: 15px; right: 15px; width: 32px; height: 32px; z-index: 2;">
+        <span class="material-symbols-rounded" style="font-size: 18px;">close</span>
+    </div>
+    
+    <div class="txt-h2 tc-main mb-5" style="font-size: 1.1rem;">把「昂昂」加到主畫面</div>
+    <div class="txt-caption tc-muted">一鍵開啟專屬的微療癒空間</div>
+    
+    <div class="ios-step-box txt-body tc-main">
+        <div class="d-flex align-center gap-8">
+            1. 點擊下方工具列的 <span class="material-symbols-rounded tc-blue" style="font-size: 20px;">ios_share</span> 分享
+        </div>
+        <div class="d-flex align-center gap-8">
+            2. 選擇 <span class="material-symbols-rounded tc-main" style="font-size: 20px; background: #fff; border-radius: 4px; border: 1px solid #ccc; padding: 2px;">add_box</span> <b>加入主畫面</b>
+        </div>
+    </div>
+    <div class="ios-pwa-arrow"></div>
 </div>
 
 <script>
@@ -1246,34 +1283,57 @@ async function recordMood(moodType) {
     }, 2500);
 }
 // ==========================================
-// PWA 安裝邏輯 (Add to Home Screen)
+// PWA 安裝邏輯 (支援 Android 原生與 iOS 精美引導)
 // ==========================================
 let deferredPrompt;
 
-// 監聽瀏覽器的安裝事件
 window.addEventListener('beforeinstallprompt', (e) => {
-    // 防止 Chrome 67 以前的版本自動顯示安裝提示
     e.preventDefault();
-    // 儲存事件，以便稍後觸發
     deferredPrompt = e;
 });
 
+// 判斷是否為 iOS 設備
+function isIos() {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test(userAgent);
+}
+
+// 判斷是否已經在 PWA (Standalone) 模式中運行
+function isRunningStandalone() {
+    return (window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+}
+
+function closeIosPrompt() {
+    document.getElementById('ios-pwa-prompt').classList.remove('is-active');
+}
+
 function installPWA() {
+    if (isRunningStandalone()) {
+        // 已經安裝好了
+        alert('太棒了！您已經在使用「昂昂」專屬 App 模式囉！');
+        return;
+    }
+
     if (deferredPrompt) {
-        // 顯示安裝提示
+        // 👉 Android / 電腦版 Chrome：觸發原生安裝彈窗
         deferredPrompt.prompt();
-        // 等待使用者回應
         deferredPrompt.userChoice.then((choiceResult) => {
             if (choiceResult.outcome === 'accepted') {
-                console.log('使用者接受安裝「昂昂向上」');
-            } else {
-                console.log('使用者拒絕安裝');
+                console.log('使用者接受安裝');
             }
-            deferredPrompt = null; // 提示過後清空
+            deferredPrompt = null;
         });
+    } else if (isIos()) {
+        // 👉 iOS Safari：彈出我們剛剛寫的精美教學彈窗
+        document.getElementById('ios-pwa-prompt').classList.add('is-active');
+        
+        // 貼心設計：8秒後自動收起，避免擋住畫面太久
+        setTimeout(() => {
+            closeIosPrompt();
+        }, 8000);
     } else {
-        // 如果瀏覽器不支援，或已經安裝過，給予貼心提示
-        alert('你的裝置可能已經安裝過，或是請透過瀏覽器的「分享 / 設定」選單，手動選擇「加入主畫面」即可變成專屬 App 喔！');
+        // 其他不支援的瀏覽器 (例如電腦版的 Safari 或某些第三方內建瀏覽器)
+        alert('您的瀏覽器目前不支援自動安裝，請透過瀏覽器的「分享 / 設定」選單，手動選擇「加入主畫面」。');
     }
 }
 
