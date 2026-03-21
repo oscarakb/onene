@@ -20,7 +20,7 @@ class BaseCardController {
         }); 
     }
 
-        applyFullscreenSetting() {
+    applyFullscreenSetting() {
         if (localStorage.getItem('oneneFullscreenDefault') === 'true' && !this.el.classList.contains('fullscreen-mode')) {
             this.el.classList.add('fullscreen-mode');
             document.body.style.overflow = 'hidden'; // 🌟 自動進入全螢幕時，鎖定背景
@@ -42,7 +42,8 @@ class BaseCardController {
         document.body.style.overflow = ''; // 🌟 卡片重置關閉時，確保背景解鎖
         if (typeof this.onCloseCallback === 'function') { this.onCloseCallback(this.data.id); }
     }
-        handleAction(action, target) { 
+    
+    handleAction(action, target) { 
         if (action === 'close-card') { 
             this.el.classList.remove('fullscreen-mode'); 
             document.body.style.overflow = ''; // 🌟 手動關閉全螢幕卡片時，解鎖背景
@@ -117,9 +118,9 @@ class MindCleanController extends BaseCardController {
     triggerRitual(btnEl, callback) {} 
     render() {
         let stepHTML = '';
-        if(this.step === 1) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">delete_outline</span><div class="text-lg mt-15 mb-15">第一步：垃圾箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">想一件今天卡住你的事...<br>在腦海匯聚能量包住它<br>把它縮成一個小小的灰色氣泡。</p><div><div class="breathe-hint">✧ 配合按鈕光暈深呼吸，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">點擊捏碎它</button></div></div></div>`;
-        else if(this.step === 2) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">inventory_2</span><div class="text-lg mt-15 mb-15">第二步：存儲箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">明天也有困住你的事？<br>把它放進箱子鎖好<br>明天再說。</p><div><div class="breathe-hint">✧ 再一次深吸氣，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">封存焦慮</button></div></div></div>`;
-        else if(this.step === 3) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">redeem</span><div class="text-lg mt-15 mb-15">最後：收穫箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">回想今天完成的一件好事...<br>那怕只是一件小事<br>也感受那份微小的成就感。</p><div><div class="breathe-hint">✧ 感受平靜的擴張，微笑著點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="finish-clean">存入能量</button></div></div></div>`;
+        if(this.step === 1) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">delete_outline</span><div class="text-lg mt-15 mb-15">第一步：垃圾箱</div><p class="text-sm opacity-90 mb-10 line-height-lg">想一件今天卡住你的事...<br>在腦海匯聚能量包住它<br>把它縮成一個小小的灰色氣泡。</p><div class="mt-25"><div class="breathe-hint">✧ 配合按鈕光暈深呼吸，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">點擊捏碎它</button></div></div></div>`;
+        else if(this.step === 2) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">inventory_2</span><div class="text-lg mt-15 mb-15">第二步：存儲箱</div><p class="text-sm opacity-90 mb-10 line-height-lg">明天也有困住你的事？<br>把它放進箱子鎖好<br>明天再說。</p><div class="mt-25"><div class="breathe-hint">✧ 再一次深吸氣，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">封存焦慮</button></div></div></div>`;
+        else if(this.step === 3) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">redeem</span><div class="text-lg mt-15 mb-15">最後：收穫箱</div><p class="text-sm opacity-90 mb-10 line-height-lg">回想今天完成的一件好事...<br>那怕只是一件小事<br>也感受那份微小的成就感。</p><div class="mt-25"><div class="breathe-hint">✧ 感受平靜的擴張，微笑著點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="finish-clean">存入能量</button></div></div></div>`;
         this.el.innerHTML = this.getSharedUI() + stepHTML + `<div data-action="close-card" class="action-close">✕ 結束練習</div>`; 
         this.syncHeight();
     }
@@ -412,7 +413,9 @@ class BreathController extends BaseCardController {
     runAnimation() {
         if(this.isRunning) return; this.isRunning = true; this.totalRounds = 0; this.rewardGiven = false;
         const wrap = this.el.querySelector('.breath-content-wrap');
-        if(wrap) { wrap.innerHTML = `<div style="padding: 40px 20px 30px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%;" class="text-white"><div class="text-lg font-bold mb-5 title">準備開始...</div><div class="text-sm opacity-90 subtitle">請調整坐姿</div><div class="breath-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="meditation-guide" id="meditation-text">...</div></div>`; }
+        if(wrap) { 
+            wrap.innerHTML = `<div class="breath-circle"></div><div style="padding: 40px 20px 30px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; z-index: 2;" class="text-white"><div class="text-lg font-bold mb-5 title">準備開始...</div><div class="text-sm opacity-90 subtitle">請調整坐姿</div><div class="breath-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><div class="meditation-guide" id="meditation-text">...</div></div>`; 
+        }
         this.titleEl = this.el.querySelector('.title'); this.subtitleEl = this.el.querySelector('.subtitle'); this.dots = this.el.querySelectorAll('.dot'); this.guideEl = document.getElementById('meditation-text');
         this.seq = [{t:"吸氣...", s:"深深吸飽 4 秒", exp:true}, {t:"憋氣...", s:"停留 4 秒", exp:true}, {t:"吐氣...", s:"慢慢吐出 4 秒", exp:false}]; this.step = 0; this.dotIndex = 0;
         setTimeout(() => { this.runCycle(); this.timer = setInterval(() => this.runCycle(), 4000); }, 50);
@@ -614,15 +617,37 @@ class EyeTrackerController extends BaseCardController {
 
 class BubbleController extends BaseCardController {
     constructor(el, data, onClose) { super(el, data, onClose); this.poppedCount = 0; }
-    start() { if(this.isActive) return; this.isActive = true; this.applyFullscreenSetting(); this.el.classList.add('pop-active'); this.renderGrid(); }
-    handleAction(action, target) { super.handleAction(action, target); if (action === 'pop-single-bubble') { this.pop(target); } if (action === 'refresh-bubbles') { this.renderGrid(); } }
+    
+    start() { 
+        if(this.isActive) return; 
+        this.isActive = true; 
+        this.applyFullscreenSetting(); 
+        this.el.classList.add('pop-active'); 
+        this.renderGrid(); 
+    }
+    
+    handleAction(action, target) { 
+        super.handleAction(action, target); 
+        if (action === 'pop-single-bubble') { this.pop(target); } 
+        if (action === 'refresh-bubbles') { this.renderGrid(); } 
+    }
+    
     renderGrid() {
-        this.poppedCount = 0; let gridHTML = ''; for(let i=0; i<25; i++) gridHTML += `<div class="bubble" data-action="pop-single-bubble"></div>`;
+        this.poppedCount = 0; 
+        let gridHTML = ''; 
+        for(let i=0; i<25; i++) {
+            gridHTML += `<div class="bubble" data-action="pop-single-bubble"></div>`;
+        }
+        
+        // 🌟 這裡還原為 001 檔案的寫法：將 fadeIn 放在最外層的 div 上！
         this.el.innerHTML = this.getSharedUI() + `<div style="animation: fadeIn 0.5s ease; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;"><div data-action="refresh-bubbles" style="height:60px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1rem; font-weight:700; cursor:pointer; width:100%; z-index: 2;"><span>↻ 再來一張</span></div><div class="bubble-grid">${gridHTML}</div></div><div data-action="close-card" class="action-close">✕ 結束練習</div>`;
+        
         this.syncHeight();
     }
+
     pop(bubbleEl) {} 
 }
+
 // ==========================================
 // 轉念流沙畫控制器 (速度調校 + 高度鎖定修復)
 // ==========================================
@@ -810,8 +835,6 @@ class SandPaintingController extends BaseCardController {
             this.ctx.save();
             
             // 🌟 消失速度調校：
-            // 從 0.9992 改為 0.996。
-            // 這會讓字跡比之前更快消失，但仍保有足夠時間寫完中文字。
             this.ctx.globalAlpha = 0.996; 
             
             // 保持原地消散質感，配合極微模糊
