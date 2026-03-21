@@ -117,9 +117,9 @@ class MindCleanController extends BaseCardController {
     triggerRitual(btnEl, callback) {} 
     render() {
         let stepHTML = '';
-        if(this.step === 1) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">delete_outline</span><div class="text-lg mt-15 mb-15">第一步：垃圾箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">想一件今天的挫折或煩惱...<br>把它縮成一個小小的灰色氣泡。</p><div><div class="breathe-hint">✧ 配合按鈕光暈深呼吸，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">點擊捏碎它</button></div></div></div>`;
-        else if(this.step === 2) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">inventory_2</span><div class="text-lg mt-15 mb-15">第二步：存儲箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">還有什麼明天要擔心的？<br>把它放進箱子鎖好，明天再說。</p><div><div class="breathe-hint">✧ 再一次深吸氣，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">封存焦慮</button></div></div></div>`;
-        else if(this.step === 3) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">redeem</span><div class="text-lg mt-15 mb-15">最後：收穫箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">回想今天做的一件小好事...<br>純粹感受那份微小的成就感。</p><div><div class="breathe-hint">✧ 感受平靜的擴張，微笑著點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="finish-clean">存入能量</button></div></div></div>`;
+        if(this.step === 1) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">delete_outline</span><div class="text-lg mt-15 mb-15">第一步：垃圾箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">想一件今天卡住你的事...<br>在腦海匯聚能量包住它<br>把它縮成一個小小的灰色氣泡。</p><div><div class="breathe-hint">✧ 配合按鈕光暈深呼吸，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">點擊捏碎它</button></div></div></div>`;
+        else if(this.step === 2) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">inventory_2</span><div class="text-lg mt-15 mb-15">第二步：存儲箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">明天也有困住你的事？<br>把它放進箱子鎖好<br>明天再說。</p><div><div class="breathe-hint">✧ 再一次深吸氣，吐氣時點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="next-step">封存焦慮</button></div></div></div>`;
+        else if(this.step === 3) stepHTML = `<div class="card-body"><span class="material-symbols-rounded icon-lg mb-10">redeem</span><div class="text-lg mt-15 mb-15">最後：收穫箱</div><p class="text-sm opacity-90 mb-25 line-height-lg">回想今天完成的一件好事...<br>那怕只是一件小事<br>也感受那份微小的成就感。</p><div><div class="breathe-hint">✧ 感受平靜的擴張，微笑著點擊 ✧</div><div class="btn-breathe-wrapper"><div class="btn-halo"></div><button class="start-btn breathe-btn" data-action="finish-clean">存入能量</button></div></div></div>`;
         this.el.innerHTML = this.getSharedUI() + stepHTML + `<div data-action="close-card" class="action-close">✕ 結束練習</div>`; 
         this.syncHeight();
     }
@@ -148,11 +148,71 @@ class AnswerBookController extends BaseCardController {
 
     renderPrompt() { 
         this.el.innerHTML = this.getSharedUI() + `
+            <style>
+                /* 1. 書本後方的呼吸光暈 (提升效能版) */
+                @keyframes bookHaloBreathe {
+                    0%, 100% {
+                        /* 加入 translateZ(0) 強制開啟 GPU 硬體加速 */
+                        transform: scale(0.8) translateZ(0);
+                        opacity: 0.1;
+                    }
+                    50% {
+                        transform: scale(2.2) translateZ(0);
+                        opacity: 0.6;
+                    }
+                }
+                
+                /* 2. 書本圖示本身的微幅浮動 (移除耗能的 filter 動畫) */
+                @keyframes bookIconBreathe {
+                    0%, 100% { transform: scale(1) translateZ(0); }
+                    50% { transform: scale(1.08) translateZ(0); }
+                }
+
+                .book-ritual-wrapper {
+                    position: relative;
+                    width: 140px;
+                    height: 140px;
+                    margin: 10px auto 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .book-halo {
+                    position: absolute;
+                    width: 70px;
+                    height: 70px;
+                    border-radius: 50%;
+                    /* 使用純粹的漸層與 transform/opacity 動畫，效能極佳 */
+                    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(230,211,245,0.3) 50%, transparent 70%);
+                    animation: bookHaloBreathe 8s ease-in-out infinite;
+                    pointer-events: none;
+                    z-index: 1;
+                    /* 提前告訴瀏覽器這些屬性會改變，預先優化 */
+                    will-change: transform, opacity;
+                }
+
+                .book-icon {
+                    position: relative;
+                    z-index: 2;
+                    animation: bookIconBreathe 8s ease-in-out infinite;
+                    color: #fff;
+                    /* 改用靜態發光，避免每幀重繪陰影 */
+                    text-shadow: 0 0 12px rgba(255,255,255,0.6);
+                    will-change: transform;
+                    /* 解決文字或圖示在緩慢縮放時的邊緣像素抖動 */
+                    backface-visibility: hidden; 
+                    -webkit-font-smoothing: antialiased;
+                }
+            </style>
+
             <div class="card-body-result">
-                <div class="text-lg tracking-wide mb-10">默念問題 3 次</div>
-                <div data-action="reveal-answer-ritual" class="cursor-pointer">
-                    <span class="material-symbols-rounded icon-xxl pointer-none">menu_book</span>
-                    <div class="text-xs opacity-80 pointer-none mt-10">點擊書本獲得答案</div>
+                <div class="text-lg tracking-wide mb-15 font-bold">在心裡默念問題</div>
+                <div class="text-sm opacity-90 line-height-lg mb-10">跟隨書本的光暈深呼吸三次<br>準備好後，請點擊書本</div>
+                
+                <div data-action="reveal-answer-ritual" class="cursor-pointer book-ritual-wrapper">
+                    <div class="book-halo"></div>
+                    <span class="material-symbols-rounded icon-xxl pointer-none book-icon">menu_book</span>
                 </div>
             </div>
             <div data-action="close-card" class="action-close">✕ 結束練習</div>
@@ -161,17 +221,85 @@ class AnswerBookController extends BaseCardController {
     }
 
     showRitual() { 
+        // 動態生成 12 顆星塵粒子，從四周朝中心匯聚
+        let stardustHTML = '';
+        for (let i = 0; i < 12; i++) {
+            const angle = (Math.PI * 2 / 12) * i; // 將 360 度分成 12 等分
+            const distance = 70 + Math.random() * 40; // 產生 70~110px 的隨機半徑距離
+            const tx = Math.cos(angle) * distance;
+            const ty = Math.sin(angle) * distance;
+            const delay = Math.random() * 0.6; // 隨機延遲 0~0.6秒，讓粒子錯落有致
+            
+            // 透過 CSS 變數 (--tx, --ty) 將起點座標傳給動畫
+            stardustHTML += `<div class="stardust" style="--tx: ${tx}px; --ty: ${ty}px; animation-delay: ${delay}s;"></div>`;
+        }
+
         this.el.innerHTML = this.getSharedUI() + `
-            <div class="card-body-result">
-                <div class="text-lg tracking-wider opacity-90 font-normal">連接宇宙能量中...</div>
-                <div class="loading-dots">
+            <style>
+                /* 1. 水波紋擴散 (Ripple Effect) */
+                @keyframes ritualRipple {
+                    0% { transform: scale(0.5); opacity: 0.8; border-width: 3px; }
+                    100% { transform: scale(3.5); opacity: 0; border-width: 0px; }
+                }
+                .ripple-wrapper {
+                    position: relative; width: 100px; height: 100px; margin: 0 auto 20px;
+                    display: flex; align-items: center; justify-content: center;
+                }
+                .ripple-ring {
+                    position: absolute; width: 40px; height: 40px;
+                    border: 2px solid rgba(255, 255, 255, 0.6); border-radius: 50%;
+                    animation: ritualRipple 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+                }
+                /* 讓波紋有層次感 */
+                .ripple-ring:nth-child(2) { animation-delay: 0.5s; }
+                .ripple-ring:nth-child(3) { animation-delay: 1.0s; }
+                
+                /* 中心能量光球 */
+                .ripple-center-glow {
+                    width: 12px; height: 12px; background: #fff; border-radius: 50%;
+                    box-shadow: 0 0 20px 4px rgba(255, 255, 255, 0.9);
+                    animation: centerPulse 1s ease-in-out infinite alternate;
+                }
+                @keyframes centerPulse {
+                    0% { transform: scale(0.8); opacity: 0.6; }
+                    100% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 30px 8px rgba(230, 211, 245, 0.9); }
+                }
+
+                /* 2. 星塵匯聚 (Stardust Gathering) */
+                @keyframes stardustGather {
+                    0% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
+                    20% { opacity: 0.9; }
+                    100% { transform: translate(0, 0) scale(1.5); opacity: 0; filter: blur(1px); }
+                }
+                .stardust {
+                    position: absolute; top: calc(50% - 2px); left: calc(50% - 2px); 
+                    width: 4px; height: 4px; background: #fff; border-radius: 50%;
+                    box-shadow: 0 0 8px 2px rgba(230, 211, 245, 0.8);
+                    /* cubic-bezier 讓粒子起步慢，最後快速吸入中心 */
+                    animation: stardustGather 1.2s cubic-bezier(0.5, 0, 0.1, 1) forwards;
+                }
+            </style>
+
+            <div class="card-body-result" style="min-height: 380px;">
+                <div class="ripple-wrapper">
+                    <div class="ripple-ring"></div>
+                    <div class="ripple-ring"></div>
+                    <div class="ripple-ring"></div>
+                    <div class="ripple-center-glow"></div>
+                    ${stardustHTML}
+                </div>
+                
+                <div class="text-lg tracking-wider opacity-90 font-normal mt-10">連接宇宙能量中...</div>
+                <div class="loading-dots mt-15">
                     <div class="loading-dot"></div>
                     <div class="loading-dot"></div>
                     <div class="loading-dot"></div>
                 </div>
             </div>`; 
         this.syncHeight(); 
-        setTimeout(() => this.reveal(), 1800); 
+        
+        // 為了讓星塵匯聚與水波紋的演出更完整，將等待時間微調至 2.4 秒
+        setTimeout(() => this.reveal(), 2400); 
     }
 
     reveal() { 
@@ -182,21 +310,37 @@ class AnswerBookController extends BaseCardController {
 
         this.el.innerHTML = this.getSharedUI() + `
             <style>
-                /* 適中的文字呼吸光動畫 */
-                @keyframes answerGlowBreathe {
-                    0%, 100% {
-                        /* 基礎微光 */
-                        text-shadow: 0 0 4px rgba(255, 255, 255, 0.15);
-                        opacity: 0.85;
-                    }
-                    50% {
-                        /* 光暈強度調回適中，比上一版亮，但不會刺眼 */
-                        text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 20px rgba(230, 211, 245, 0.45);
-                        opacity: 1;
-                    }
+                /* 1. 迷霧散去 (撥雲見日進場) */
+                @keyframes blurReveal {
+                    0% { filter: blur(12px); opacity: 0; transform: scale(0.9); }
+                    100% { filter: blur(0px); opacity: 1; transform: scale(1); }
                 }
+
+                /* 2. 無重力漂浮 (持續性的上下懸浮) */
+                @keyframes floatingIdle {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-8px); }
+                }
+
+                /* 3. 呼吸光暈 (持續性的能量微光) */
+                @keyframes answerGlowBreathe {
+                    0%, 100% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.15); }
+                    50% { text-shadow: 0 0 12px rgba(255, 255, 255, 0.75), 0 0 20px rgba(230, 211, 245, 0.45); }
+                }
+
+                /* 外層容器負責漂浮 (加上硬體加速) */
+                .answer-floating-container {
+                    animation: floatingIdle 6s ease-in-out infinite;
+                    will-change: transform;
+                }
+
+                /* 內層文字負責散霧與發光 */
                 .answer-breathing-text {
-                    animation: answerGlowBreathe 6s ease-in-out infinite;
+                    animation: 
+                        blurReveal 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards,
+                        answerGlowBreathe 6s ease-in-out infinite;
+                    opacity: 0; 
+                    will-change: filter, opacity, text-shadow;
                 }
             </style>
 
@@ -205,8 +349,10 @@ class AnswerBookController extends BaseCardController {
                 <div class="w-100 d-flex flex-col align-center justify-center">
                     <div class="text-sm opacity-50 tracking-wide mb-15">解答</div>
                     
-                    <div class="text-xl line-height-lg font-bold tracking-wider text-center w-100 answer-breathing-text" style="padding: 0 30px; box-sizing: border-box;">
-                        ${answer}
+                    <div class="answer-floating-container w-100">
+                        <div class="text-xl line-height-lg font-bold tracking-wider text-center w-100 answer-breathing-text" style="padding: 0 30px; box-sizing: border-box;">
+                            ${answer}
+                        </div>
                     </div>
                 </div>
                 
@@ -562,11 +708,11 @@ class SandPaintingController extends BaseCardController {
                 .sand-safe-area { padding: 65px 15px 15px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
             </style>
             <div class="card-body sand-safe-area">
-                <div class="text-xs opacity-70 mb-10">在沙地上慢慢寫下你的煩惱...</div>
+                <div class="text-xs opacity-70 mb-10">寫下想丟掉的人、事、物...</div>
                 <div id="sand-canvas-wrapper">
                     <canvas id="sand-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; touch-action:none; cursor:crosshair;"></canvas>
                 </div>
-                <div class="mt-15 text-xs opacity-60">字跡會原地消散，直到重獲清明</div>
+                <div class="mt-15 text-xs opacity-60">困擾會隨著流沙消散</div>
             </div>
             <div data-action="close-card" class="action-close">✕ 結束練習</div>
         `;

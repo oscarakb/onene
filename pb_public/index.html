@@ -64,6 +64,14 @@
             --text-main: #5c5470; --border-color: #d1cdd9;
         }
 
+        /* --- 統一文字格式表 --- */
+        .txt-h1 { font-size: var(--text-2xl); font-weight: 700; }
+        .txt-h2 { font-size: var(--text-xl); font-weight: 700; }
+        .txt-h3 { font-size: var(--text-lg); font-weight: 600; }
+        .txt-body-lg { font-size: var(--text-md); font-weight: 500; } /* 與卡片標題一致 */
+        .txt-body { font-size: var(--text-sm); font-weight: 400; }
+        .txt-caption { font-size: var(--text-xs); font-weight: 400; }
+
         /* 針對特定元件在深色模式的微調 */
         html[data-theme="dark"] .start-btn { color: #121212 !important; background: #e0e0e0; }
         html[data-theme="dark"] .bubble { background: #333333; }
@@ -136,6 +144,69 @@
             box-shadow: 0 4px 10px rgba(142, 81, 170, 0.2); transition: transform 0.2s;
         }
         .stats-action-btn:active { transform: scale(0.98); }
+
+        /* --- 小工具列 (Quick Tools) --- */
+        .quick-tools-container {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 2px 0 10px 0; /* 預留陰影與捲軸空間 */
+            margin-top: 15px;
+            margin-bottom: 20px;
+            scrollbar-width: none; /* Firefox 隱藏捲軸 */
+            -ms-overflow-style: none; /* IE 隱藏捲軸 */
+            scroll-snap-type: x mandatory; /* 讓滑動更順暢 */
+        }
+
+        .quick-tools-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari/Edge 隱藏捲軸 */
+        }
+
+        .tool-btn {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            width: 76px;
+            height: 80px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            scroll-snap-align: start;
+        }
+
+        .tool-btn:active {
+            transform: scale(0.94);
+            background: var(--bg-light);
+        }
+
+        .tool-icon {
+            font-size: 28px;
+            color: var(--text-main);
+            transition: color 0.4s;
+        }
+
+        .tool-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1;
+            transition: color 0.4s;
+        }
+
+        /* 賦予個別圖示專屬品牌色，保持微療癒感 */
+        .tool-btn.stats .tool-icon { color: var(--onene-purple); }
+        .tool-btn.mood .tool-icon { color: var(--onene-yellow); }
+        .tool-btn.noise .tool-icon { color: var(--onene-blue); }
+        .tool-btn.ig .tool-icon { color: var(--onene-pink); }
+        .tool-btn.share .tool-icon { color: var(--onene-green); }
+        .tool-btn.pwa .tool-icon { color: var(--onene-orange); }
 
         /* --- 主題切換按鈕 --- */
         .theme-switcher-capsule {
@@ -287,7 +358,32 @@
         @media (min-width: 1024px) { .container { max-width: 1100px; flex-direction: row; gap: 60px; padding-top: 60px; } .sidebar { width: 380px; position: sticky; top: 40px; } }
         footer { padding: 40px 0; text-align: center; font-size: 0.75rem; color: #ccc; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- 心情打卡按鈕樣式 --- */
+        .mood-action-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 16px 10px;
+            width: calc(50% - 8px); /* 兩兩一排 */
+            max-width: 140px;
+            cursor: pointer;
+            box-shadow: var(--shadow-soft);
+            transition: var(--transition-standard);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
+        .mood-action-btn:active {
+            transform: scale(0.94);
+            background: var(--bg-light);
+        }
+
+        .mood-emoji {
+            font-size: 36px;
+            margin-bottom: 4px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+        }
         /* ================= 設定按鈕與 Modal 樣式 ================= */
         .settings-btn-capsule {
             position: absolute; top: 15px; left: 15px; width: 40px; height: 40px;
@@ -355,6 +451,7 @@
 <body>
 <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.5/dist/pocketbase.umd.js"></script>
 <script src="controllers.js"></script>
+<script src="auth.js"></script>
 
 <div class="container">
     <aside class="sidebar">
@@ -384,20 +481,77 @@
                  onclick="handleBrandClick()">
                 <img src="https://i.ibb.co/Z62svXTY/9.jpg" alt="Logo" class="logo-img">
                 <h1 class="text-xl font-bold tc-main pointer-none" style="margin: 0; line-height: 1.2;">昂昂向上</h1>                
-                <span class="text-xs tracking-wide tc-muted pointer-none d-block mt-10">STAY PURE · STAY BRAVE</span>            </div>
+                <span class="text-xs tracking-wide tc-muted pointer-none d-block mt-5">STAY PURE · STAY BRAVE</span>
+            </div>
         </div>
         
-        <div class="auth-card">
-            <div id="user-status" class="txt-body-lg tc-muted w-100 text-center">尚未登入</div>
+        <div class="quick-tools-container">
+            <div class="tool-btn stats" id="view-stats-btn">
+                <span class="material-symbols-rounded tool-icon">analytics</span>
+                <span class="tool-label">練習報告</span>
+            </div>
             
-            <button id="view-stats-btn" class="stats-action-btn txt-body-lg tc-white">
-                <span class="material-symbols-rounded" style="font-size: 20px;">analytics</span>
-                我的練習統計
-            </button>
+            <div class="tool-btn mood" onclick="openModal('mood-modal')">
+                <span class="material-symbols-rounded tool-icon">add_reaction</span>
+                <span class="tool-label">心情打卡</span>
+            </div>
+
+            <div class="tool-btn noise" onclick="toggleWhiteNoise()">
+                <span class="material-symbols-rounded tool-icon">headphones</span>
+                <span class="tool-label">白噪音</span>
+            </div>
+
+            <a href="https://instagram.com/your_account" target="_blank" class="tool-btn ig">
+                <span class="material-symbols-rounded tool-icon">photo_camera</span>
+                <span class="tool-label">Instagram</span>
+            </a>
+
+            <div class="tool-btn share" data-action="share">
+                <span class="material-symbols-rounded tool-icon">ios_share</span>
+                <span class="tool-label">分享昂昂</span>
+            </div>
+
+            <div class="tool-btn pwa" onclick="installPWA()">
+                <span class="material-symbols-rounded tool-icon">add_to_home_screen</span>
+                <span class="tool-label">加到桌面</span>
+            </div>
         </div>
-    </aside>
+        </aside>
     
     <main id="main-content-list" style="flex: 1;"></main>
+</div>
+
+<div id="mood-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closeModal('mood-modal')">
+            <span class="material-symbols-rounded">close</span>
+        </div>
+        <div class="txt-h2 tc-main mt-10">今日心情打卡</div>
+    </div>
+    <div class="modal-body text-center">
+        <div class="txt-body-lg tc-muted mb-20">現在的你，感覺怎麼樣呢？</div>
+        
+        <div class="d-flex justify-center gap-15 mb-25" style="flex-wrap: wrap;">
+            <button class="mood-action-btn" onclick="recordMood('great')">
+                <div class="mood-emoji">✨</div>
+                <div class="txt-caption tc-main mt-5">充滿能量</div>
+            </button>
+            <button class="mood-action-btn" onclick="recordMood('good')">
+                <div class="mood-emoji">😌</div>
+                <div class="txt-caption tc-main mt-5">平靜舒適</div>
+            </button>
+            <button class="mood-action-btn" onclick="recordMood('tired')">
+                <div class="mood-emoji">🔋</div>
+                <div class="txt-caption tc-main mt-5">有點疲憊</div>
+            </button>
+            <button class="mood-action-btn" onclick="recordMood('anxious')">
+                <div class="mood-emoji">🌧️</div>
+                <div class="txt-caption tc-main mt-5">焦慮低落</div>
+            </button>
+        </div>
+
+        <div id="mood-feedback" class="auth-error-box txt-body mt-15" style="display:none; background: rgba(32, 139, 126, 0.1); color: var(--onene-green); border-radius: 12px; padding: 12px;"></div>
+    </div>
 </div>
 
 <footer>© 2026 昂昂向上 Inno-Research</footer>
@@ -422,7 +576,7 @@
 
             <div id="stats-overview" class="d-flex gap-15 mb-25">
                 <div style="flex: 1; background: rgba(0,0,0,0.03); padding: 16px; border-radius: 16px;" class="text-center">
-                    <div id="label-total-count" class="txt-caption tc-muted">該月總計</div>
+                    <div id="label-total-count" class="txt-caption tc-muted">本月總計</div>
                     <div id="stats-total-count" class="txt-h1 tc-main mt-5">0</div>
                 </div>
                 
@@ -433,14 +587,14 @@
             </div>
 
             <div class="text-left mb-10">
-                <div class="txt-body-lg tc-main mb-15">練習卡片分布</div>
+                <div class="txt-body-lg tc-main mb-15">練習清單</div>
                 <div id="stats-chart-container">
                     <div class="txt-body tc-muted text-center" style="padding: 20px;">資料讀取中...</div>
                 </div>
             </div>
 
             <div class="txt-caption tc-muted text-center mt-20" style="border-top: 1px solid var(--border-color); padding-top: 15px;">
-                每一次練習，都是更靠近平靜的一步。
+                每一次練習，都為了更好的自己。
             </div>
         </div>
     </div>
@@ -508,7 +662,24 @@
         <div class="txt-h2 tc-main mt-5" style="letter-spacing: 2px;">昂昂向上</div>
     </div>
     <div class="modal-body">
-        <div class="settings-list">
+        
+        <div class="txt-caption tc-muted mb-5 mt-5" style="padding-left: 12px;">帳號管理</div>
+        <div class="settings-list mb-20">
+            <div class="setting-item" style="cursor: default;">
+                <div class="setting-label txt-body-lg tc-main">
+                    <img id="account-google-icon" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 24px; height: 24px; display: none;">
+                    <span class="material-symbols-rounded" id="account-mail-icon" style="display: none; color: var(--onene-yellow);">mail</span>
+                    <span id="settings-user-email-text">尚未登入</span>
+                </div>
+            </div>
+            <div class="setting-item" id="btn-open-password-modal" style="display: none;">
+                <div class="setting-label txt-body-lg tc-main"><span class="material-symbols-rounded" style="color: var(--onene-yellow);">lock_reset</span> 修改密碼</div>
+                <span class="material-symbols-rounded tc-muted">chevron_right</span>
+            </div>
+        </div>
+
+        <div class="txt-caption tc-muted mb-5" style="padding-left: 12px;">系統設定</div>
+        <div class="settings-list mb-20">
             <div class="setting-item">
                 <div class="setting-label txt-body-lg tc-main"><span class="material-symbols-rounded">fullscreen</span> 預設全螢幕展開</div>
                 <label class="toggle-switch">
@@ -530,7 +701,10 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            
+        </div>
+
+        <div class="txt-caption tc-muted mb-5" style="padding-left: 12px;">關於與資訊</div>
+        <div class="settings-list mb-25">
             <div class="setting-item" onclick="openModal('instructions-modal')">
                 <div class="setting-label txt-body-lg tc-main"><span class="material-symbols-rounded">menu_book</span> 使用說明</div>
                 <span class="material-symbols-rounded tc-muted">chevron_right</span>
@@ -553,7 +727,7 @@
             </a>
         </div>
         
-        <button id="logout-btn" class="txt-body-lg tc-white w-100 mt-20 d-flex align-center justify-center gap-8" style="display: none; background: var(--onene-red); border: none; padding: 14px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(211, 84, 70, 0.2);">
+        <button id="logout-btn" class="txt-body-lg tc-white w-100 d-flex align-center justify-center gap-8" style="display: none; background: var(--onene-red); border: none; padding: 14px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(211, 84, 70, 0.2);">
             <span class="material-symbols-rounded">logout</span> 登出帳號
         </button>
     </div>
@@ -596,6 +770,34 @@
     </div>
     <div class="modal-body">
         <div class="settings-list txt-body tc-main" style="padding: 24px;" id="privacy-content">資料讀取中...</div>
+    </div>
+</div>
+
+<div id="password-modal" class="app-modal">
+    <div class="modal-header">
+        <div class="modal-close-btn" onclick="closeModal('password-modal')"><span class="material-symbols-rounded">arrow_back</span></div>
+        <div class="txt-h2 tc-main mt-10">修改密碼</div>
+    </div>
+    <div class="modal-body">
+        <div class="settings-list" style="padding: 24px;">
+            <div class="mb-15 text-left">
+                <label class="txt-body-lg tc-main d-block mb-5">舊密碼</label>
+                <input type="password" id="old-password" placeholder="輸入目前的密碼" class="auth-input txt-body">
+            </div>
+            <div class="mb-15 text-left">
+                <label class="txt-body-lg tc-main d-block mb-5">新密碼</label>
+                <input type="password" id="new-password" placeholder="至少 8 碼，含英文與數字" class="auth-input txt-body">
+            </div>
+            <div class="mb-25 text-left">
+                <label class="txt-body-lg tc-main d-block mb-5">確認新密碼</label>
+                <input type="password" id="new-password-confirm" placeholder="再次輸入新密碼" class="auth-input txt-body">
+            </div>
+            
+            <div id="password-error-msg" class="auth-error-box txt-body tc-red mb-15"></div>
+            <div id="password-success-msg" class="auth-error-box txt-body mt-15" style="background: rgba(32, 139, 126, 0.1); color: var(--onene-green); display: none;"></div>
+            
+            <button id="password-submit-btn" class="auth-submit-btn txt-body-lg tc-white mt-10">確認修改</button>
+        </div>
     </div>
 </div>
 
@@ -961,345 +1163,118 @@ async function saveSettings() {
     }
 }
 
-// ==========================================
-// PocketBase 會員系統邏輯
-// ==========================================
 const pb = new PocketBase('https://onene.up.railway.app');
-const statsCache = {}; 
 
-function initAuth() {
-    const viewStatsBtn = document.getElementById('view-stats-btn');
-    const userStatus = document.getElementById('user-status');
-    const googleLoginBtn = document.getElementById('google-login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
+// ==========================================
+// 白噪音播放邏輯 (White Noise Logic)
+// ==========================================
+// 這裡暫時使用一個開源的雨聲作為範例，上線時建議換成你掛載在 PocketBase 上的音檔
+const NOISE_URL = 'https://cdn.pixabay.com/download/audio/2021/08/09/audio_82472b53bd.mp3?filename=rain-and-thunder-16705.mp3';
+let noiseAudio = new Audio(NOISE_URL);
+noiseAudio.loop = true; // 循環播放
+let isNoisePlaying = false;
 
-    let currentReportDate = new Date();
+function toggleWhiteNoise() {
+    const noiseBtn = document.querySelector('.tool-btn.noise');
+    const icon = noiseBtn.querySelector('.tool-icon');
 
-    async function loadMonthlyStats(targetDate) {
-        const year = targetDate.getFullYear();
-        const month = targetDate.getMonth() + 1;
-        const cacheKey = `${year}-${month}`; 
+    if (isNoisePlaying) {
+        noiseAudio.pause();
+        isNoisePlaying = false;
+        icon.innerText = 'headphones';
+        noiseBtn.style.background = 'var(--card-bg)';
+        noiseBtn.style.color = 'var(--text-main)';
+    } else {
+        // 加上一點漸進式音量，才不會嚇到人（正念科技細節）
+        noiseAudio.volume = 0;
+        noiseAudio.play().then(() => {
+            let vol = 0;
+            let fade = setInterval(() => {
+                if (vol < 0.8) { vol += 0.05; noiseAudio.volume = vol; } 
+                else { clearInterval(fade); }
+            }, 100);
+            
+            isNoisePlaying = true;
+            icon.innerText = 'graphic_eq'; // 換成音軌 icon
+            noiseBtn.style.background = 'var(--onene-peace)'; // 套用平靜能量漸層
+            noiseBtn.style.color = '#fff'; // 讓漸層上的字變白色
+        }).catch(e => {
+            console.log("播放失敗，需使用者先互動才能播放音訊", e);
+            alert("請先在畫面上隨意點擊一下，才能解鎖音效播放喔！");
+        });
+    }
+}
 
-        const chartContainer = document.getElementById('stats-chart-container');
-        const totalCountEl = document.getElementById('stats-total-count');
-        const monthLabel = document.getElementById('stats-current-month');
-        const nextBtn = document.getElementById('stats-next-month');
-        
-        monthLabel.innerText = `${year} 年 ${month} 月`;
-        const now = new Date();
-        if (year === now.getFullYear() && month === now.getMonth() + 1) {
-            nextBtn.style.opacity = '0.2'; nextBtn.style.pointerEvents = 'none';
-        } else {
-            nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto';
-        }
+// ==========================================
+// 心情打卡邏輯 (Mood Tracker Logic)
+// ==========================================
+async function recordMood(moodType) {
+    const feedbackEl = document.getElementById('mood-feedback');
+    const messages = {
+        'great': '太棒了！把這份光芒分享給世界吧。',
+        'good': '享受這份平靜，這是你專屬的時刻。',
+        'tired': '辛苦了，今天請允許自己好好休息一下。',
+        'anxious': '沒關係的，深呼吸，我們慢慢來。'
+    };
 
-        if (statsCache[cacheKey]) {
-            console.log(`[Cache] 讀取 ${cacheKey} 的快取數據`);
-            renderStatsUI(statsCache[cacheKey], year, month);
-            return;
-        }
+    // 顯示暖心回饋
+    feedbackEl.innerText = messages[moodType] + ' (已為您紀錄)';
+    feedbackEl.style.display = 'block';
 
-        chartContainer.innerHTML = '<div class="txt-body tc-muted text-center" style="padding: 20px;">能量讀取中...</div>';
-        totalCountEl.innerText = '0';
+    // 觸發物理星星獎勵 + 震動
+    addStar(true);
+    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+    }
 
+    // 儲存到 PocketBase (記得要在 PocketBase 後台開一張 mood_logs 的表)
+    if (typeof pb !== 'undefined' && pb.authStore.isValid) {
         try {
-            const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString().replace('T', ' ');
-            const endDate = new Date(Date.UTC(year, month, 1)).toISOString().replace('T', ' ');
-
-            const records = await pb.collection('practice_logs').getFullList({
-                filter: `user = "${pb.authStore.model.id}" && created >= "${startDate}" && created < "${endDate}"`,
-                fields: 'cardTitle,created', 
-                requestKey: 'monthly-stats-fetch'
+            await pb.collection('mood_logs').create({
+                user: pb.authStore.model.id,
+                mood: moodType
             });
-            
-            statsCache[cacheKey] = records;
-            renderStatsUI(records, year, month);
-
-        } catch (err) {
-            if (err.isAbort) return;
-            console.error("無法讀取統計資料", err);
-            chartContainer.innerHTML = '<div class="txt-body tc-red text-center" style="padding: 20px;">目前無法連線到資料庫。</div>';
+        } catch (e) {
+            console.log("心情紀錄同步失敗，請確認 PocketBase 是否有 mood_logs 集合", e);
         }
     }
 
-    function renderStatsUI(records, year, month) {
-        const chartContainer = document.getElementById('stats-chart-container');
-        const totalCountEl = document.getElementById('stats-total-count');
-        const weeklyBlock = document.getElementById('weekly-stats-block');
-        const weeklyCountEl = document.getElementById('stats-weekly-count');
+    // 2.5 秒後自動關閉彈窗並重置
+    setTimeout(() => {
+        closeModal('mood-modal');
+        setTimeout(() => { feedbackEl.style.display = 'none'; }, 400); // 等動畫結束再藏起來
+    }, 2500);
+}
+// ==========================================
+// PWA 安裝邏輯 (Add to Home Screen)
+// ==========================================
+let deferredPrompt;
 
-        const now = new Date();
-        if (year === now.getFullYear() && month === now.getMonth() + 1) {
-            weeklyBlock.style.display = 'block';
-            const today = new Date();
-            const dayOfWeek = today.getDay() || 7; 
-            today.setHours(0, 0, 0, 0);
-            const thisMonday = new Date(today);
-            thisMonday.setDate(today.getDate() - dayOfWeek + 1);
-            weeklyCountEl.innerText = records.filter(r => new Date(r.created.replace(' ', 'T')) >= thisMonday).length;
-        } else {
-            weeklyBlock.style.display = 'none';
-        }
+// 監聽瀏覽器的安裝事件
+window.addEventListener('beforeinstallprompt', (e) => {
+    // 防止 Chrome 67 以前的版本自動顯示安裝提示
+    e.preventDefault();
+    // 儲存事件，以便稍後觸發
+    deferredPrompt = e;
+});
 
-        if (records.length === 0) {
-            chartContainer.innerHTML = `<div class="txt-body tc-muted text-center" style="padding: 40px;">${month} 月份還沒有練習紀錄。</div>`;
-            totalCountEl.innerText = '0';
-            return;
-        }
-
-        const statsMap = {};
-        records.forEach(record => {
-            const title = record.cardTitle || '未知練習';
-            statsMap[title] = (statsMap[title] || 0) + 1;
-        });
-
-        const rawStats = Object.keys(statsMap).map(title => ({
-            cardTitle: title, count: statsMap[title]
-        })).sort((a, b) => b.count - a.count);
-
-        totalCountEl.innerText = records.length;
-        const maxCount = rawStats[0].count;
-
-        let chartHTML = '';
-        rawStats.forEach(stat => {
-            const percentage = maxCount > 0 ? (stat.count / maxCount) * 100 : 0;
-            chartHTML += `
-                <div class="mb-15">
-                    <div class="d-flex justify-between align-center mb-5">
-                        <div class="txt-body-lg tc-main">${stat.cardTitle}</div>
-                        <div class="txt-h3 tc-purple">${stat.count} 次</div>
-                    </div>
-                    <div class="w-100" style="height: 10px; background: rgba(0,0,0,0.04); border-radius: 5px; overflow: hidden;">
-                        <div style="height: 100%; width: 0; background: var(--onene-purple); border-radius: 5px; transition: width 0.6s ease-out;" class="stats-bar" data-width="${percentage}%"></div>
-                    </div>
-                </div>`;
-        });
-        chartContainer.innerHTML = chartHTML;
-        setTimeout(() => { document.querySelectorAll('.stats-bar').forEach(bar => { bar.style.width = bar.dataset.width; }); }, 100);
-    }
-
-    if (viewStatsBtn) {
-        viewStatsBtn.addEventListener('click', () => {
-            if (!pb || !pb.authStore.isValid) {
-                document.getElementById('tab-login').click(); 
-                openModal('auth-modal');
-                return;
-            }
-            openModal('stats-modal');
-            currentReportDate = new Date(); 
-            loadMonthlyStats(currentReportDate);
-        });
-
-        document.getElementById('stats-prev-month').addEventListener('click', () => {
-            currentReportDate.setMonth(currentReportDate.getMonth() - 1);
-            loadMonthlyStats(currentReportDate);
-        });
-
-        document.getElementById('stats-next-month').addEventListener('click', () => {
-            const now = new Date();
-            if (currentReportDate.getFullYear() === now.getFullYear() && currentReportDate.getMonth() === now.getMonth()) return;
-            currentReportDate.setMonth(currentReportDate.getMonth() + 1);
-            loadMonthlyStats(currentReportDate);
-        });
-    }
-
-    function syncDataFromDB() {
-        const user = pb.authStore.model;
-        if (!user) return;
-
-        if (user.theme && user.theme !== '') {
-            localStorage.setItem('oneneSavedTheme', user.theme);
-            localStorage.setItem('oneneSavedThemeIcon', user.themeIcon || 'palette');
-            if (user.theme === 'default') document.documentElement.removeAttribute('data-theme');
-            else document.documentElement.setAttribute('data-theme', user.theme);
-            document.getElementById('current-theme-icon').innerText = user.themeIcon || 'palette';
-        }
-
-        if (user.starCount !== undefined && user.starCount !== null) {
-            let dbCount = user.starCount;
-            let localCount = parseInt(localStorage.getItem('oneneStarCount') || '0');
-            
-            if (dbCount !== localCount) {
-                localStorage.setItem('oneneStarCount', dbCount);
-                stars = []; 
-                for(let i = 0; i < dbCount; i++) {
-                    addStar(false); 
-                }
-            }
-        }
-
-        if (user.soundEnabled !== undefined && user.soundEnabled !== null) {
-            localStorage.setItem('oneneSoundEnabled', user.soundEnabled);
-            document.getElementById('toggle-sound').checked = user.soundEnabled;
-        }
-        if (user.vibEnabled !== undefined && user.vibEnabled !== null) {
-            localStorage.setItem('oneneVibrationEnabled', user.vibEnabled);
-            document.getElementById('toggle-vibration').checked = user.vibEnabled;
-        }
-        if (user.fsDefault !== undefined && user.fsDefault !== null) {
-            localStorage.setItem('oneneFullscreenDefault', user.fsDefault);
-            document.getElementById('toggle-fullscreen-default').checked = user.fsDefault;
-        }
-    }
-
-    function checkLoginStatus() {
-        if (pb.authStore.isValid) {
-            const email = pb.authStore.model.email || '';
-            const nickname = email ? email.split('@')[0] : '練習生';
-            
-            userStatus.innerText = `練習生：${nickname}`;
-            if(logoutBtn) logoutBtn.style.display = 'flex';
-            syncDataFromDB();
-        } else {
-            userStatus.innerText = '尚未登入';
-            if(logoutBtn) logoutBtn.style.display = 'none';
-        }
-    }
-
-    let isLoginMode = true; 
-    const authModal = document.getElementById('auth-modal');
-    const tabLogin = document.getElementById('tab-login');
-    const tabRegister = document.getElementById('tab-register');
-    const googleErrorMsg = document.getElementById('google-error-msg');
-    const authTitle = document.getElementById('auth-modal-title');
-    const authSubmitBtn = document.getElementById('auth-submit-btn');
-    const emailInput = document.getElementById('auth-email');
-    const passwordInput = document.getElementById('auth-password');
-    const confirmGroup = document.getElementById('auth-confirm-group');
-    const passwordConfirmInput = document.getElementById('auth-password-confirm');
-    const errorMsg = document.getElementById('auth-error-msg');
-
-    tabLogin.addEventListener('click', () => {
-        isLoginMode = true;
-        tabLogin.style.background = 'var(--onene-yellow)'; tabLogin.style.color = '#fff';
-        tabRegister.style.background = 'rgba(0,0,0,0.05)'; tabRegister.style.color = 'var(--text-muted)';
-        authTitle.innerText = '會員登入';
-        authSubmitBtn.innerText = '確認登入';
-        errorMsg.style.display = 'none';
-        confirmGroup.style.display = 'none'; 
-    });
-
-    tabRegister.addEventListener('click', () => {
-        isLoginMode = false;
-        tabRegister.style.background = 'var(--onene-yellow)'; tabRegister.style.color = '#fff';
-        tabLogin.style.background = 'rgba(0,0,0,0.05)'; tabLogin.style.color = 'var(--text-muted)';
-        authTitle.innerText = '註冊新帳號';
-        authSubmitBtn.innerText = '確認註冊';
-        errorMsg.style.display = 'none';
-        confirmGroup.style.display = 'block'; 
-    });
-
-    authSubmitBtn.addEventListener('click', async () => {
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const passwordConfirm = passwordConfirmInput.value; 
-        errorMsg.style.display = 'none';
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!email || !password) {
-            errorMsg.innerText = '請填寫信箱與密碼';
-            errorMsg.style.display = 'block';
-            return;
-        }
-
-        if (!emailRegex.test(email)) {
-            errorMsg.innerText = '請檢查信箱是否包含 @ 與正確的網域';
-            errorMsg.style.display = 'block';
-            return;
-        }
-
-        if (password.length < 8) {
-            errorMsg.innerText = '密碼長度至少需要 8 碼';
-            errorMsg.style.display = 'block';
-            return;
-        }
-        
-        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d).+$/;
-        if (!passwordRegex.test(password)) {
-            errorMsg.innerText = '密碼需同時包含「英文」與「數字」';
-            errorMsg.style.display = 'block';
-            return;
-        }
-
-        if (!isLoginMode) {
-            if (password !== passwordConfirm) {
-                errorMsg.innerText = '兩次輸入的密碼不一致，請重新確認一次';
-                errorMsg.style.display = 'block';
-                return;
-            }
-        }
-
-        authSubmitBtn.innerText = '處理中...';
-        authSubmitBtn.disabled = true;
-
-        try {
-            if (isLoginMode) {
-                await pb.collection('users').authWithPassword(email, password);
-                closeModal('auth-modal');
-                checkLoginStatus();
+function installPWA() {
+    if (deferredPrompt) {
+        // 顯示安裝提示
+        deferredPrompt.prompt();
+        // 等待使用者回應
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('使用者接受安裝「昂昂向上」');
             } else {
-                await pb.collection('users').create({
-                    email: email,
-                    password: password,
-                    passwordConfirm: passwordConfirm, 
-                    theme: localStorage.getItem('oneneSavedTheme') || 'default',
-                    themeIcon: localStorage.getItem('oneneSavedThemeIcon') || 'palette',
-                    starCount: parseInt(localStorage.getItem('oneneStarCount') || '0'),
-                    lastDate: new Date().toLocaleDateString(),
-                    soundEnabled: document.getElementById('toggle-sound').checked,
-                    vibEnabled: document.getElementById('toggle-vibration').checked,
-                    fsDefault: document.getElementById('toggle-fullscreen-default').checked
-                });
-                await pb.collection('users').authWithPassword(email, password);
-                closeModal('auth-modal');
-                checkLoginStatus();
+                console.log('使用者拒絕安裝');
             }
-        } catch (err) {
-            errorMsg.innerText = isLoginMode 
-                ? '登入失敗，請檢查信箱或密碼是否正確。' 
-                : '註冊失敗，信箱可能已被使用，或格式不正確。';
-            errorMsg.style.display = 'block';
-        } finally {
-            authSubmitBtn.innerText = isLoginMode ? '確認登入' : '確認註冊';
-            authSubmitBtn.disabled = false;
-        }
-    });
-
-    if (googleLoginBtn) {
-        googleLoginBtn.addEventListener('click', async () => {
-            if(googleErrorMsg) googleErrorMsg.style.display = 'none';
-            if(errorMsg) errorMsg.style.display = 'none';
-            
-            try {
-                await pb.collection('users').authWithOAuth2({ 
-                    provider: 'google' 
-                });
-                
-                checkLoginStatus();
-                closeModal('auth-modal');
-                window.location.reload();
-            } catch (err) {
-                console.error("詳細錯誤內容：", err);
-                if(googleErrorMsg) {
-                    googleErrorMsg.innerText = '登入失敗。請稍後再試，或聯絡開發者確認後台設定。';
-                    googleErrorMsg.style.display = 'block';
-                }
-            }
+            deferredPrompt = null; // 提示過後清空
         });
+    } else {
+        // 如果瀏覽器不支援，或已經安裝過，給予貼心提示
+        alert('你的裝置可能已經安裝過，或是請透過瀏覽器的「分享 / 設定」選單，手動選擇「加入主畫面」即可變成專屬 App 喔！');
     }
-
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            pb.authStore.clear(); 
-            localStorage.removeItem('oneneStarCount');
-            localStorage.removeItem('oneneSavedTheme');
-            localStorage.removeItem('oneneSavedThemeIcon');
-            window.location.reload(); 
-        });
-    }
-
-    checkLoginStatus();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
