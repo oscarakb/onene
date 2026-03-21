@@ -1,0 +1,292 @@
+/* ==========================================
+   1. 核心變數系統 (CSS Variables)
+   ========================================== */
+:root {
+    /* --- 預設原版配色 (Light Mode) --- */
+    --onene-red: #d35446; 
+    --onene-orange: #e67e22;
+    --onene-yellow: #d99a00; 
+    --onene-green: #208b7e;
+    --onene-blue: #4a82df;
+    --onene-navy: #2c4463;
+    --onene-indigo: #5c6bc0;
+    --onene-purple: #8e51aa;
+    --onene-pink: #e36b89;
+    --onene-peace: linear-gradient(-45deg, #ffb347, #ffcc33, #f5d76e, #f8ca00); 
+    
+    /* --- 基礎 UI 色彩 --- */
+    --bg-light: #f4f5f7;      
+    --card-bg: #ffffff;       
+    --text-main: #333333;     
+    --text-muted: #888888;    
+    --border-color: #e5e7eb;  
+    --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.04); 
+    --transition-standard: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* --- 元件專屬狀態變數 (大幅減少深色模式的覆寫) --- */
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --hover-bg: rgba(0, 0, 0, 0.05);
+    --active-bg: rgba(0, 0, 0, 0.1);
+    --bubble-bg: var(--card-bg);
+    --bubble-popped-bg: rgba(0, 0, 0, 0.1);
+    --start-btn-bg: rgba(255, 255, 255, 0.95);
+    --start-btn-text: #2d2d2d;
+    --slider-bg: #d1d6d6;
+}
+
+/* --- 暗黑模式 (Dark Mode) --- */
+html[data-theme="dark"] {
+    --onene-red: #555555; --onene-orange: #5d5d5d; --onene-yellow: #666666; --onene-blue: #444444;
+    --onene-indigo: #484848; --onene-navy: #333d47; --onene-purple: #3a3a3a; --onene-green: #4f4f4f; --onene-pink: #5c5c5c;
+    --onene-peace: linear-gradient(-45deg, #2a2a2a, #3a3a3a, #1a1a1a, #222222); 
+    
+    --bg-light: #121212; --card-bg: #1e1e1e; --text-main: #e0e0e0; --text-muted: #888888;
+    --border-color: #2c2c2e; --shadow-soft: 0 10px 40px rgba(0,0,0,0.6);
+
+    --glass-bg: rgba(40, 40, 42, 0.85);
+    --hover-bg: rgba(255, 255, 255, 0.05);
+    --active-bg: rgba(255, 255, 255, 0.1);
+    --bubble-bg: #333333;
+    --bubble-popped-bg: rgba(255, 255, 255, 0.05);
+    --start-btn-bg: #e0e0e0;
+    --start-btn-text: #121212;
+    --slider-bg: #444;
+}
+
+/* --- 莫蘭迪模式 (Morandi) --- */
+html[data-theme="morandi"] {
+    --onene-red: #b36b63; --onene-orange: #bd8b6a; --onene-yellow: #a8834a; --onene-blue: #637f9e;
+    --onene-indigo: #67728f; --onene-navy: #485b6e; --onene-purple: #857591; --onene-green: #6c8477; --onene-pink: #b07c8e;
+    --onene-peace: linear-gradient(-45deg, #b36b63, #857591, #637f9e, #6c8477); 
+    --bg-light: #e2e6e6; --card-bg: #edf1f1; --text-main: #4a4a4a; --border-color: #d1d6d6;
+}
+
+/* --- ADHD 模式 --- */
+html[data-theme="adhd"] {
+    --onene-red: #a8653f; --onene-orange: #a67449; --onene-yellow: #9c7b30; --onene-blue: #527367;
+    --onene-indigo: #4e6b5d; --onene-navy: #384c57; --onene-purple: #6d6053; --onene-green: #546b58; --onene-pink: #8c605c;
+    --onene-peace: linear-gradient(-45deg, #527367, #546b58, #6d6053, #9c7b30); 
+    --bg-light: #dde3db; --card-bg: #e8ece6; --text-main: #2f3e46; --border-color: #c9d1c7;
+}
+
+/* --- HSP 高敏感模式 --- */
+html[data-theme="hsp"] {
+    --onene-red: #9e7d9e; --onene-orange: #ad877d; --onene-yellow: #9c876b; --onene-blue: #6d84a3;
+    --onene-indigo: #757b99; --onene-navy: #586478; --onene-purple: #847996; --onene-green: #738a7f; --onene-pink: #a1818e;
+    --onene-peace: linear-gradient(-45deg, #847996, #9e7d9e, #6d84a3, #738a7f); 
+    --bg-light: #e5e1eb; --card-bg: #eeeaf2; --text-main: #5c5470; --border-color: #d1cdd9;
+}
+
+
+/* ==========================================
+   2. 統一排版與字體 (Typography & Utilities)
+   ========================================== */
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+body { 
+    font-family: 'Noto Sans TC', sans-serif; margin: 0; color: var(--text-main); 
+    background-color: var(--bg-light); line-height: 1.6; -webkit-font-smoothing: antialiased; 
+    transition: background-color 0.4s, color 0.4s; 
+}
+
+/* 標題與文字層級 */
+.txt-h1 { font-size: 2.5rem; font-weight: 700; }
+.txt-h2 { font-size: 1.5rem; font-weight: 700; }
+.txt-h3 { font-size: 1.2rem; font-weight: 600; }
+.txt-body-lg { font-size: 1rem; font-weight: 500; } 
+.txt-body { font-size: 0.9rem; font-weight: 400; }
+.txt-caption { font-size: 0.85rem; font-weight: 400; }
+
+/* 顏色小工具 */
+.tc-main { color: var(--text-main); transition: color 0.4s; }
+.tc-muted { color: var(--text-muted); transition: color 0.4s; }
+.tc-white { color: #ffffff; }
+.tc-purple { color: var(--onene-purple); }
+.tc-yellow { color: var(--onene-yellow); }
+.tc-red { color: var(--onene-red); }
+.tc-blue { color: var(--onene-blue); }
+
+/* 佈局小工具 */
+.text-center { text-align: center; } .text-left { text-align: left; }
+.w-100 { width: 100%; } .d-flex { display: flex; } .d-block { display: block; }
+.align-center { align-items: center; } .justify-center { justify-content: center; } .justify-between { justify-content: space-between; }
+.flex-col { flex-direction: column; } .gap-8 { gap: 8px; } .gap-10 { gap: 10px; } .gap-12 { gap: 12px; } .gap-15 { gap: 15px; }
+.mt-5 { margin-top: 5px; } .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; } .mt-20 { margin-top: 20px; } 
+.mb-5 { margin-bottom: 5px; } .mb-10 { margin-bottom: 10px; } .mb-15 { margin-bottom: 15px; } .mb-20 { margin-bottom: 20px; } .mb-25 { margin-bottom: 25px; }
+.opacity-70 { opacity: 0.7; } .opacity-80 { opacity: 0.8; } .pointer-none { pointer-events: none; }
+.cursor-pointer { cursor: pointer; }
+
+
+/* ==========================================
+   3. 全域佈局 (Layout & Components)
+   ========================================== */
+.container { width: 100%; max-width: 600px; margin: 0 auto; padding: 40px 24px 60px 24px; display: flex; flex-direction: column; }
+@media (min-width: 1024px) { 
+    .container { max-width: 1100px; flex-direction: row; gap: 60px; padding-top: 60px; } 
+    .sidebar { width: 380px; position: sticky; top: 40px; } 
+}
+
+/* --- 品牌卡片 --- */
+.brand-card { 
+    background: var(--card-bg); border-radius: 30px; padding: 40px 20px 30px; text-align: center; 
+    box-shadow: var(--shadow-soft); border: 1px solid var(--border-color); margin-bottom: 20px; 
+    position: relative; overflow: hidden; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: background-color 0.4s, border-color 0.4s, box-shadow 0.4s;
+}
+#physics-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.brand-content-wrapper { position: relative; z-index: 10; cursor: pointer; user-select: none; transition: transform 0.2s; width: 100%; }
+.brand-content-wrapper:active { transform: scale(0.98); }
+.logo-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 14px; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); pointer-events: none; }
+
+/* --- 小工具列 (Quick Tools) --- */
+.quick-tools-container {
+    display: flex; gap: 12px; overflow-x: auto; padding: 2px 0 10px 0; margin-top: 15px; margin-bottom: 20px;
+    scrollbar-width: none; -ms-overflow-style: none; scroll-snap-type: x mandatory;
+}
+.quick-tools-container::-webkit-scrollbar { display: none; }
+.tool-btn {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px; width: 76px; height: 80px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; text-decoration: none; transition: transform 0.2s, background 0.2s, box-shadow 0.2s; scroll-snap-align: start;
+}
+.tool-btn:active { transform: scale(0.94); background: var(--hover-bg); }
+.tool-icon { font-size: 28px; color: var(--text-main); transition: color 0.4s; }
+.tool-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; line-height: 1; transition: color 0.4s; }
+.tool-btn.stats .tool-icon { color: var(--onene-purple); }
+.tool-btn.mood .tool-icon { color: var(--onene-yellow); }
+.tool-btn.noise .tool-icon { color: var(--onene-blue); }
+.tool-btn.ig .tool-icon { color: var(--onene-pink); }
+.tool-btn.share .tool-icon { color: var(--onene-green); }
+.tool-btn.pwa .tool-icon { color: var(--onene-orange); }
+
+
+/* ==========================================
+   4. 動態卡片系統 (Cards & Fullscreen)
+   ========================================== */
+.grid-container { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.card { 
+    text-decoration: none; border-radius: 16px; padding: 18px; cursor: pointer; display: flex; align-items: center; gap: 14px; transition: var(--transition-standard); 
+    background-color: var(--card-bg); border: 1.5px solid transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.02); position: relative; overflow: hidden; min-height: 85px; 
+}
+.material-symbols-rounded { font-family: 'Material Symbols Rounded'; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; line-height: 1; flex-shrink: 0; }
+.card-icon { width: 24px; height: 24px; font-size: 24px; }
+.icon-lg { font-size: 56px; } .icon-xl { font-size: 60px; } .icon-xxl { font-size: 80px; }
+
+/* 卡片填色系列 */
+.card.filled { color: #fff; opacity: 0.99; }
+.card.filled.red { background-color: var(--onene-red); }
+.card.filled.orange { background-color: var(--onene-orange); }
+.card.filled.yellow { background-color: var(--onene-yellow); }
+.card.filled.green { background-color: var(--onene-green); }
+.card.filled.blue { background-color: var(--onene-blue); }
+.card.filled.pink { background-color: var(--onene-pink); }
+.card.filled.indigo { background-color: var(--onene-indigo); }
+.card.filled.navy { background-color: var(--onene-navy); }
+.card.filled.purple { background-color: var(--onene-purple); }
+
+/* 卡片展開與互動狀態 */
+.grid-container .card.pop-active, .grid-container .card.balanced-state, .grid-container .card.breath-active { 
+    height: auto; display: flex; flex-direction: column; align-items: stretch; padding: 0; cursor: default; will-change: height, min-height; justify-content: flex-start; 
+}
+.grid-container .card.balanced-state { 
+    transition: min-height 0.8s ease, background 1.5s ease; background: var(--onene-peace); background-size: 400% 400%; animation: energyFlow 12s ease infinite; text-align: center; border: none; box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+}
+@keyframes energyFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+.card.fullscreen-mode {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999;
+    margin: 0; border: none; border-radius: 0; box-sizing: border-box; overflow-y: auto; display: flex; flex-direction: column; overscroll-behavior: contain; 
+}
+
+/* controllers.js 動態產生的內部排版 (刪除重複的設定) */
+.card-body { padding: 40px 20px; text-align: center; color: #fff; animation: fadeIn 0.5s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%; z-index: 2; }
+.card-body-result { padding: 60px 20px; text-align: center; color: #fff; animation: fadeIn 0.8s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; width: 100%; z-index: 2; }
+.action-close { width: 100%; min-height: 52px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(0, 0, 0, 0.15); border-top: 1px solid rgba(255, 255, 255, 0.1); margin-top: auto; transition: background 0.2s; z-index: 10; }
+.action-close:active { background: rgba(0, 0, 0, 0.3); }
+
+
+/* ==========================================
+   5. 互動元件與彈窗 (Modals, Buttons, Forms)
+   ========================================== */
+.start-btn { 
+    display: inline-block; padding: 12px 30px; border-radius: 30px; cursor: pointer; border: none; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s, background 0.2s; 
+    background: var(--start-btn-bg); color: var(--start-btn-text) !important;
+}
+.start-btn:active { transform: scale(0.95); }
+
+.app-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-light); z-index: 10000;
+    display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto; padding: 0; overscroll-behavior: contain; 
+}
+.app-modal.is-active { transform: translateY(0); }
+.modal-header { position: relative; padding: 40px 20px 10px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.modal-close-btn { 
+    position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; 
+    background: var(--hover-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 0.2s; color: var(--text-main);
+}
+.modal-close-btn:active { background: var(--active-bg); }
+.modal-body { flex: 1; padding: 20px 24px 60px; max-width: 600px; margin: 0 auto; width: 100%; }
+
+.settings-list { background: var(--card-bg); border-radius: 20px; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); }
+.setting-item { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
+.setting-item:last-child { border-bottom: none; }
+.setting-item:active { background: var(--hover-bg); }
+.setting-label { display: flex; align-items: center; gap: 12px; }
+
+/* Toggle Switch */
+.toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--slider-bg); transition: .4s; border-radius: 30px; }
+.slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+input:checked + .slider { background-color: var(--onene-yellow); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* 表單元件 */
+.auth-input { width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--border-color); background: var(--bg-light); color: var(--text-main); outline: none; transition: border-color 0.3s; }
+.auth-error-box { background: rgba(211, 84, 70, 0.1); padding: 8px; border-radius: 8px; text-align: center; display: none; }
+.auth-submit-btn { width: 100%; background: var(--onene-yellow); border: none; padding: 14px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.2s; }
+
+
+/* ==========================================
+   6. 專屬功能特效與動畫 (Animations & Specifics)
+   ========================================== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 主題膠囊與設定按鈕 */
+.theme-switcher-capsule, .settings-btn-capsule {
+    position: absolute; width: 40px; background: var(--glass-bg); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 20; border: 1px solid var(--border-color); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.theme-switcher-capsule { top: 15px; right: 15px; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; align-items: center; max-height: 40px; }
+.theme-switcher-capsule.expanded { max-height: 240px; }
+.settings-btn-capsule { top: 15px; left: 15px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); }
+.settings-btn-capsule:hover { color: var(--onene-yellow); transform: scale(1.1); }
+.theme-toggle-btn, .theme-opt { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s, color 0.4s; }
+.theme-opt:hover { transform: scale(1.15); filter: brightness(0.85); }
+html[data-theme="dark"] .theme-opt:hover { filter: brightness(1.3); }
+
+/* 主題圖示顏色控制 */
+html:not([data-theme]) .theme-toggle-btn { color: #d99a00; }
+html[data-theme="dark"] .theme-toggle-btn { color: #aaaaaa; } 
+html[data-theme="morandi"] .theme-toggle-btn { color: #637f9e; } 
+html[data-theme="adhd"] .theme-toggle-btn { color: #546b58; } 
+html[data-theme="hsp"] .theme-toggle-btn { color: #847996; } 
+.theme-opt[data-theme-val="default"] { color: #d99a00; } 
+.theme-opt[data-theme-val="dark"] { color: #666666; }    
+.theme-opt[data-theme-val="morandi"] { color: #637f9e; } 
+.theme-opt[data-theme-val="adhd"] { color: #546b58; }    
+.theme-opt[data-theme-val="hsp"] { color: #847996; }   
+html:not([data-theme]) .theme-opt[data-theme-val="default"], html[data-theme="dark"] .theme-opt[data-theme-val="dark"], html[data-theme="morandi"] .theme-opt[data-theme-val="morandi"], html[data-theme="adhd"] .theme-opt[data-theme-val="adhd"], html[data-theme="hsp"] .theme-opt[data-theme-val="hsp"] { display: none; }
+
+/* Bubble 泡泡紙 */
+.bubble { width: 45px; height: 45px; background: var(--bubble-bg); border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.12), inset 0 -3px 6px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.1s; }
+.bubble.is-popped { transform: scale(0.8); background: var(--bubble-popped-bg); opacity: 0.4; pointer-events: none; }
+
+/* 其他特效：夸夸包、iOS PWA 提示... (請保留原有的特效動畫，已整合變數) */
+.ios-step-box { background: var(--hover-bg); border-radius: 12px; padding: 12px; margin-top: 15px; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+.mood-action-btn { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 16px 10px; width: calc(50% - 8px); max-width: 140px; cursor: pointer; box-shadow: var(--shadow-soft); transition: var(--transition-standard); display: flex; flex-direction: column; align-items: center; }
+.mood-action-btn:active { transform: scale(0.94); background: var(--bg-light); }
+
+/* 省略 controller 特效 (Rituals, Heart Glow 等)，因不涉及重複定義即可直接套用原本的 Keyframes */
