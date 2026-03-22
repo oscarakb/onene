@@ -1,19 +1,24 @@
 // pb_hooks/tts.pb.js
 
-// 註冊一個自定義的 API 端點
-routerAdd("POST", "/api/praise-tts", (c) => {
+routerAdd("POST", "/api/praise-tts", (e) => {
     try {
-        // 1. 取得前端傳來的文字
-        const data = $apis.requestInfo(c).data;
+        // 1. 安全解析前端傳送的文字 (兼容 PB v0.22 寫法)
+        const info = $apis.requestInfo(e);
+        const data = info.data || info.body || {};
         const text = data.text;
 
         if (!text) {
-            return c.json(400, { error: "Missing text" });
+            console.log("⚠️ 錯誤: 前端沒有傳送 text 參數");
+            return e.json(400, { error: "Missing text" });
         }
 
-        // 2. 從系統環境變數讀取 Token (Railway 會自動注入)
-        // 注意：PocketBase JS VM 中讀取環境變數的方式
-        const token = $os.env("HF_TOKEN"); 
+        // 2. 讀取 Railway 環境變數 (修正為 process.env)
+        const token = process.env.HF_TOKEN;
+        
+        if (!token) {
+            console.log("⚠️ 錯誤: Railway 沒有抓到 HF_TOKEN 環境變數！");
+            return e.json(500, { error: "Missing HF_TOKEN" });
+        }
 
         // 3. 呼叫 Hugging Face Inference API
         const response = $http.send({
@@ -26,14 +31,18 @@ routerAdd("POST", "/api/praise-tts", (c) => {
             }
         });
 
+        // 如果 Hugging Face 回傳錯誤 (例如正在冷啟動 503)
         if (response.statusCode !== 200) {
-            return c.json(response.statusCode, { error: "HF API Error" });
+            console.log("⚠️ Hugging Face 拒絕連線，狀態碼: " + response.statusCode);
+            return e.json(response.statusCode, { error: "HF API Error" });
         }
 
-        // 4. 直接回傳音訊二進制流給前端
-        return c.blob(200, "audio/mpeg", response.raw);
+        // 4. 成功！將語音檔案回傳給前端
+        return e.blob(200, "audio/mpeg", response.raw);
 
-    } catch (e) {
-        return c.json(500, { error: e.message });
+    } catch (err) {
+        // 把具體崩潰原因印在 Railway 後台，方便追蹤
+        console.error("❌ TTS 腳本發生崩潰: ", err);
+        return e.json(500, { error: err.message });
     }
 });
