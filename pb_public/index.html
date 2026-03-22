@@ -454,7 +454,7 @@ async function fetchDynamicContent() {
 
 // ---------- 誇誇包與心情打卡 ----------
 // ---------- 誇誇包功能 (整合 HF API & 本地備援) ----------
-const PRAISES_LIBRARY = ["寶寶，你今天好棒！", "辛苦了，你已經做得很好了喔！", "深呼吸，宇宙都在為你加油！", "慢慢來，不用急，你擁有屬於自己的時區。", "哪怕只前進了一小步，也是很棒的進步！", "今天也要好好照顧自己喔！"];
+const PRAISES_LIBRARY = ["寶寶，你好棒", "全宇宙你最棒", "你真優秀", "你就是命好", "你真的好棒"];
 let isPraiseSpeaking = false;
 let currentAudio = null;
 
@@ -515,7 +515,7 @@ async function playPraise() {
         
         if (currentAudio) currentAudio.pause();
         currentAudio = new Audio(audioUrl);
-
+        currentAudio.playbackRate = 1.45;
         currentAudio.onended = () => {
             isPraiseSpeaking = false;
             stopPraiseAnimation(text); // 播完顯示文字與重播按鈕
