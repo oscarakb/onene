@@ -66,7 +66,7 @@
                 <span class="tool-label">心情打卡</span>
             </div>
 
-            <div class="tool-btn praise" onclick="openModal('praise-modal')">
+            <div class="tool-btn praise" onclick="openPraiseModal()">
                 <span class="material-symbols-rounded tool-icon" style="color: #ff9a9e;">favorite</span>
                 <span class="tool-label">誇誇包</span>
             </div>
@@ -238,9 +238,9 @@
     </div>
     <div class="modal-body text-center" id="praise-modal-body">
         <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;">
-            <div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 100px; margin-bottom: 120px; isolation: isolate;">
-                <div class="heart-glow-bg"></div>
-                <span class="material-symbols-rounded" style="color: #ff9a9e; font-size: 80px; animation: float 3s ease-in-out infinite; position: relative; z-index: 1;">favorite</span>
+            <div class="shared-breathe-wrapper" style="margin-top: 100px; margin-bottom: 120px;">
+            <div class="shared-breathe-halo"></div>
+            <span class="material-symbols-rounded shared-breathe-icon pointer-none" style="color: #ff9a9e; font-size: 80px;">favorite</span>
             </div>
             <div class="txt-body-lg tc-muted line-height-lg w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center;">覺得累了嗎？<br>點開它，聽聽我想對你說的話。</div>
             <div style="width: 100%; text-align: center; padding-bottom: 20px;">
@@ -453,34 +453,157 @@ async function fetchDynamicContent() {
 }
 
 // ---------- 誇誇包與心情打卡 ----------
+// ---------- 誇誇包功能 (整合 HF API & 本地備援) ----------
 const PRAISES_LIBRARY = ["寶寶，你今天好棒！", "辛苦了，你已經做得很好了喔！", "深呼吸，宇宙都在為你加油！", "慢慢來，不用急，你擁有屬於自己的時區。", "哪怕只前進了一小步，也是很棒的進步！", "今天也要好好照顧自己喔！"];
 let isPraiseSpeaking = false;
+let currentAudio = null;
 
-function playPraise() {
+// 1. 開啟彈窗並觸發預熱
+function openPraiseModal() {
+    openModal('praise-modal');
+    warmupTTS(); 
+    stopPraiseAnimation(); // 確保每次打開都是初始跳動愛心
+}
+
+// 2. 預熱 HF 模型 (Cold Start)
+async function warmupTTS() {
+    try {
+        fetch("/api/praise-tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: "啟動" }),
+        });
+    } catch (e) { /* 靜默失敗 */ }
+}
+
+// 3. 主播放邏輯 (API + 動畫)
+async function playPraise() {
     if (isPraiseSpeaking) return;
     const text = PRAISES_LIBRARY[Math.floor(Math.random() * PRAISES_LIBRARY.length)];
     isPraiseSpeaking = true;
+
+    // 切換為播放中 UI (聲波圖示)
     const bodyEl = document.getElementById('praise-modal-body');
-    bodyEl.innerHTML = `<div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; width: 100%; box-sizing: border-box; text-align: center;"><div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 100px; margin-bottom: 120px;"><div class="sound-wave-wrapper" style="position: absolute; top: 0; left: 0; width: 100px; height: 100px; z-index: 1; display: flex; align-items: center; justify-content: center;"><div class="wave-ring" style="animation-delay: 0s;"></div><div class="wave-ring" style="animation-delay: 0.5s;"></div><div class="wave-ring" style="animation-delay: 1s;"></div></div><span class="material-symbols-rounded" style="color: #ff9a9e; position: relative; z-index: 2; font-size: 45px; filter: drop-shadow(0 2px 5px rgba(255,154,158,0.2));">record_voice_over</span></div><div class="txt-h2 tc-main line-height-lg tracking-wider text-center w-100" style="position: relative; z-index: 2; padding: 0 20px; box-sizing: border-box; font-size: 1.25rem; margin-bottom: 35px;">「${text}」</div><div style="position: relative; z-index: 2; width: 100%; text-align: center; padding-bottom: 20px;"><button class="start-btn" onclick="playPraise()" style="background: rgba(255,154,158,0.1); color: #ff9a9e; border: 1px solid rgba(255,154,158,0.2); padding: 8px 24px; border-radius: 20px; font-size: 0.85rem; opacity: 0; animation: fadeIn 0.5s 2s forwards; min-width: 130px; cursor: pointer;">↻ 再來一句</button></div></div>`;
+    bodyEl.innerHTML = `
+        <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;">
+            <div class="shared-breathe-wrapper" style="margin-top: 100px; margin-bottom: 120px;">
+                <div class="wave-ring" style="animation-delay: 0s; border-color: rgba(255, 154, 158, 0.6);"></div>
+                <div class="wave-ring" style="animation-delay: 0.5s; border-color: rgba(255, 154, 158, 0.4);"></div>
+                <div class="wave-ring" style="animation-delay: 1s; border-color: rgba(255, 154, 158, 0.2);"></div>
+                <span class="material-symbols-rounded" style="font-size: 50px; color: var(--onene-pink); position: relative; z-index: 5;">graphic_eq</span>
+            </div>
+            <div class="txt-h2 tc-main line-height-lg tracking-wider text-center w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                「${text}」
+            </div>
+            <div style="width: 100%; text-align: center; padding-bottom: 20px;">
+                <button class="start-btn pointer-none" style="background: rgba(255,154,158,0.1); color: #ff9a9e; border: 1px solid rgba(255,154,158,0.2); padding: 8px 24px; border-radius: 20px; font-size: 0.85rem; min-width: 130px;">聆聽中...</button>
+            </div>
+        </div>
+    `;
 
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-TW'; utterance.rate = 0.85; utterance.pitch = 1.2; 
-        utterance.onend = () => { isPraiseSpeaking = false; bodyEl.querySelectorAll('.wave-ring').forEach(w => w.style.animation = 'none'); };
-        utterance.onerror = () => { isPraiseSpeaking = false; };
-        window.speechSynthesis.speak(utterance);
-    } else { isPraiseSpeaking = false; }
+    try {
+        const response = await fetch("/api/praise-tts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: text }),
+        });
 
-    if(typeof addStar === 'function') addStar(true);
-    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && navigator.vibrate) navigator.vibrate([30, 50, 30]);
+        if (!response.ok) throw new Error("API 異常");
+
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        
+        if (currentAudio) currentAudio.pause();
+        currentAudio = new Audio(audioUrl);
+
+        currentAudio.onended = () => {
+            isPraiseSpeaking = false;
+            stopPraiseAnimation(text); // 播完顯示文字與重播按鈕
+            URL.revokeObjectURL(audioUrl);
+        };
+
+        await currentAudio.play();
+        triggerPraiseRewards();
+
+    } catch (err) {
+        console.warn("後端語音暫不可用，切換系統內建語音");
+        fallbackToWebSpeech(text);
+    }
 }
 
+// 4. 備援語音 (Web Speech API)
+function fallbackToWebSpeech(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW'; utterance.rate = 0.85; utterance.pitch = 1.2; 
+        
+        utterance.onend = () => {
+            isPraiseSpeaking = false;
+            stopPraiseAnimation(text);
+        };
+        utterance.onerror = () => { isPraiseSpeaking = false; stopPraiseAnimation(text); };
+        
+        window.speechSynthesis.speak(utterance);
+        triggerPraiseRewards();
+    } else {
+        isPraiseSpeaking = false;
+        stopPraiseAnimation(text);
+    }
+}
+
+// 5. 處理獎勵與震動
+function triggerPraiseRewards() {
+    if (typeof addStar === 'function') addStar(true);
+    if (localStorage.getItem('oneneVibrationEnabled') !== 'false' && navigator.vibrate) {
+        navigator.vibrate([30, 50, 30]);
+    }
+}
+
+// 6. UI 恢復邏輯 (區分「初始狀態」與「重播狀態」)
+function stopPraiseAnimation(lastText = null) {
+    const bodyEl = document.getElementById('praise-modal-body');
+    if (!bodyEl) return;
+    
+    if (lastText) {
+        // 播完後：保留文字，顯示「再來一句」
+        bodyEl.innerHTML = `
+            <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;">
+                <div class="shared-breathe-wrapper" style="margin-top: 100px; margin-bottom: 120px;">
+                    <div class="shared-breathe-halo"></div>
+                    <span class="material-symbols-rounded shared-breathe-icon pointer-none" style="color: #ff9a9e; font-size: 80px;">favorite</span>
+                </div>
+                <div class="txt-h2 tc-main line-height-lg tracking-wider text-center w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">「${lastText}」</div>
+                <div style="width: 100%; text-align: center; padding-bottom: 20px;">
+                    <button class="start-btn" onclick="playPraise()" style="background: rgba(255,154,158,0.1); color: #ff9a9e; border: 1px solid rgba(255,154,158,0.2); padding: 8px 24px; border-radius: 20px; font-size: 0.85rem; min-width: 130px; cursor: pointer;">↻ 再來一句</button>
+                </div>
+            </div>`;
+    } else {
+        // 初始狀態
+        bodyEl.innerHTML = `
+            <div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;">
+                <div class="shared-breathe-wrapper" style="margin-top: 100px; margin-bottom: 120px;">
+                    <div class="shared-breathe-halo"></div>
+                    <span class="material-symbols-rounded shared-breathe-icon pointer-none" style="color: #ff9a9e; font-size: 80px;">favorite</span>
+                </div>
+                <div class="txt-body-lg tc-muted line-height-lg w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center;">覺得累了嗎？<br>點開它，聽聽我想對你說的話。</div>
+                <div style="width: 100%; text-align: center; padding-bottom: 20px;">
+                    <button class="start-btn" onclick="playPraise()" style="background: #ff9a9e; color: #fff; border: none; padding: 12px 30px; border-radius: 30px; font-size: 1rem; min-width: 130px;">點擊聽聽</button>
+                </div>
+            </div>`;
+    }
+}
+
+// 7. 關閉彈窗事件
 function closePraiseModal() {
     closeModal('praise-modal');
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+    }
     isPraiseSpeaking = false;
-    setTimeout(() => { document.getElementById('praise-modal-body').innerHTML = `<div class="d-flex flex-col align-center justify-center w-100" style="position: relative; min-height: 350px; text-align: center;"><div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin-top: 100px; margin-bottom: 120px; isolation: isolate;"><div class="heart-glow-bg"></div><span class="material-symbols-rounded" style="color: #ff9a9e; font-size: 80px; animation: float 3s ease-in-out infinite; position: relative; z-index: 1;">favorite</span></div><div class="txt-body-lg tc-muted line-height-lg w-100" style="margin-bottom: 35px; min-height: 3.5rem; display: flex; align-items: center; justify-content: center;">覺得累了嗎？<br>點開它，聽聽我想對你說的話。</div><div style="width: 100%; text-align: center; padding-bottom: 20px;"><button class="start-btn" onclick="playPraise()" style="background: #ff9a9e; color: #fff; border: none; padding: 12px 30px; border-radius: 30px; font-size: 1rem; min-width: 130px;">點擊聽聽</button></div></div>`; }, 400);
+    setTimeout(() => { stopPraiseAnimation(); }, 400); // 彈窗關閉動畫結束後重置 UI
 }
 
 async function recordMood(moodType) {
