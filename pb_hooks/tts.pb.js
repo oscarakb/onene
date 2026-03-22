@@ -2,46 +2,37 @@
 
 routerAdd("POST", "/api/praise-tts", (e) => {
     try {
-        // 1. 安全解析前端傳送的文字 (兼容 PB v0.22 寫法)
+        // 1. 取得前端傳來的文字
         const info = $apis.requestInfo(e);
         const data = info.data || info.body || {};
         const text = data.text;
 
         if (!text) {
-            console.log("⚠️ 錯誤: 前端沒有傳送 text 參數");
             return e.json(400, { error: "Missing text" });
         }
 
-        // 2. 讀取 Railway 環境變數 (修正為 process.env)
-        const token = process.env.HF_TOKEN;
-        
-        if (!token) {
-            console.log("⚠️ 錯誤: Railway 沒有抓到 HF_TOKEN 環境變數！");
-            return e.json(500, { error: "Missing HF_TOKEN" });
-        }
+        // 2. 將中文轉換為網址安全格式
+        const urlText = encodeURIComponent(text);
 
-        // 3. 呼叫 Hugging Face Inference API
+        // 3. 呼叫 Google 隱藏版語音 API (免費、免金鑰、秒發音)
+        // 參數 tl=zh-TW 代表台灣繁體中文，client=tw-ob 是繞過驗證的關鍵
         const response = $http.send({
-            url: "https://api-inference.huggingface.co/models/espnet/kan-bayashi_csmsc_vits", 
-            method: "POST",
-            body: JSON.stringify({ inputs: text }),
-            headers: { 
-                "Authorization": "Bearer " + token,
-                "Content-Type": "application/json"
+            url: "https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-TW&client=tw-ob&q=" + urlText,
+            method: "GET",
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
             }
         });
 
-        // 如果 Hugging Face 回傳錯誤 (例如正在冷啟動 503)
         if (response.statusCode !== 200) {
-            console.log("⚠️ Hugging Face 拒絕連線，狀態碼: " + response.statusCode);
-            return e.json(response.statusCode, { error: "HF API Error" });
+            console.log("⚠️ Google TTS 連線失敗: " + response.statusCode);
+            return e.json(response.statusCode, { error: "Google API Error" });
         }
 
-        // 4. 成功！將語音檔案回傳給前端
+        // 4. 成功！回傳 MP3 音訊給前端
         return e.blob(200, "audio/mpeg", response.raw);
 
     } catch (err) {
-        // 把具體崩潰原因印在 Railway 後台，方便追蹤
         console.error("❌ TTS 腳本發生崩潰: ", err);
         return e.json(500, { error: err.message });
     }
