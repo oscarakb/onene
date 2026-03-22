@@ -22,7 +22,7 @@ routerAdd("POST", "/api/praise-tts", (e) => {
 
         // 3. 呼叫 Hugging Face Inference API
         const response = $http.send({
-            url: "https://router.huggingface.co/hf-inference/models/facebook/mms-tts-zho",
+            url: "https://api-inference.huggingface.co/models/espnet/kan-bayashi_csmsc_vits", 
             method: "POST",
             body: JSON.stringify({ inputs: text }),
             headers: { 
