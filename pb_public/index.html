@@ -468,11 +468,11 @@ function openPraiseModal() {
 // 2. 預熱 HF 模型 (Cold Start)
 async function warmupTTS() {
     try {
-        fetch("/api/praise-tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: "啟動" }),
-        });
+        fetch("https://onene.up.railway.app/api/praise-tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: "啟動" }),
+});
     } catch (e) { /* 靜默失敗 */ }
 }
 
@@ -502,11 +502,11 @@ async function playPraise() {
     `;
 
     try {
-        const response = await fetch("/api/praise-tts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: text }),
-        });
+        const response = await fetch("https://onene.up.railway.app/api/praise-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text }),
+    });
 
         if (!response.ok) throw new Error("API 異常");
 
